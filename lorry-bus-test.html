@@ -531,31 +531,7 @@
         .scroll-container::-webkit-scrollbar { width: 5px; }
         .scroll-container::-webkit-scrollbar-track { background: var(--border); border-radius: 10px; }
         .scroll-container::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
-        #scrollInner { padding: 4px 0 60px; }
-        .scroll-q-card {
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          margin: 8px 0;
-          padding: 14px 16px;
-          box-shadow: var(--shadow-sm);
-        }
-        .scroll-q-num {
-          font-size: .68rem; font-weight: 700; color: var(--accent);
-          text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
-        }
-        .scroll-q-text { font-size: .88rem; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-        .scroll-q-ta   { font-size: .82rem; color: var(--text2); margin-bottom: 8px; }
-        .scroll-opts   { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
-        .scroll-opt    { display: flex; align-items: flex-start; gap: 8px; padding: 6px 10px; border-radius: 8px; font-size: .8rem; background: var(--surface2); border: 1px solid var(--border); }
-        .scroll-opt.scroll-correct { background: rgba(39,174,96,.13); border-color: #27ae60; }
-        .scroll-opt-badge { font-weight: 700; color: var(--accent); min-width: 18px; font-size: .78rem; }
-        .scroll-answer-badge {
-          display: inline-block; margin-top: 8px; padding: 3px 10px;
-          background: rgba(39,174,96,.15); color: #27ae60;
-          border-radius: 20px; font-size: .75rem; font-weight: 700; border: 1px solid #27ae60;
-        }
-        .scroll-expl { font-size: .76rem; color: var(--text3); margin-top: 6px; line-height: 1.5; }
+        #scrollInner { padding: 4px 0 60px; display: flex; flex-direction: column; gap: 12px; }
         .scroll-end-msg {
           text-align: center; padding: 30px 16px;
           font-size: .85rem; color: var(--text3); font-style: italic;
@@ -596,7 +572,7 @@
 
         /* 2. Disable text selection everywhere */
         body, .q-en, .q-ta, .opt-en, .opt-ta,
-        .scroll-q-text, .scroll-q-ta, .scroll-opt,
+        .study-q-en, .study-q-ta,
         .explanation, .copy-body, .answer-banner {
           -webkit-user-select: none !important;
           -moz-user-select:    none !important;
@@ -783,6 +759,10 @@
           color: var(--text2); font-size: .74rem; font-weight: 700; text-decoration: none; cursor: pointer;
         }
         .switcher-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+        /* Scroll-panel wraps a study-card look, only need small spacing tweak */
+        .scroll-q-num-row { display:flex; align-items:center; gap:6px; }
+        .scroll-q-topic { font-size:.66rem; color:var(--text3); font-weight:600; }
     </style>
 </head>
 <body>
@@ -1407,25 +1387,6 @@
     // ── Backend config ──────────────────────────────────────
     const CONFIG = { API_BASE: 'https://theory-test-backend-production.up.railway.app' };
     const LB_API = CONFIG.API_BASE + '/api/lorry-bus';
-    const OPTION_IMAGES = {
-  "6769": {"A": "CD6769a.gif", "B": "CD6769b.gif", "C": "CD6769c.gif", "D": "CD6769d.gif"},
-  "6971": {"A": "CD6971a.gif", "B": "CD6971b.gif", "C": "CD6971c.gif", "D": "CD6971d.gif"},
-  "7218": {"A": "CD7218a.gif", "B": "CD7218b.gif", "C": "CD7218c.gif", "D": "CD7218d.gif"},
-  "5106": {"A": "CC5106a.gif", "B": "CC5106b.gif", "C": "CC5106c.gif", "D": "CC5106d.gif"},
-  "5214": {"A": "CC5214a.gif", "B": "CC5214b.gif", "C": "CC5214c.gif", "D": "CC5214d.gif"},
-  "5256": {"A": "CC5256a.gif", "B": "CC5256b.gif", "C": "CC5256c.gif", "D": "CC5256d.gif"},
-  "5360": {"A": "CC5360a.gif", "B": "CC5360b.gif", "C": "CC5360c.gif", "D": "CC5360d.gif"},
-  "5447": {"A": "CC5447a.gif", "B": "CC5447b.gif", "C": "CC5447c.gif", "D": "CC5447d.gif"},
-  "5449": {"A": "CC5449a.gif", "B": "CC5449b.gif", "C": "CC5449c.gif", "D": "CC5449d.gif"},
-  "5450": {"A": "CC5450a.gif", "B": "CC5450b.gif", "C": "CC5450c.gif", "D": "CC5450d.gif"},
-  "6099": {"A": "CD6099a.gif", "B": "CD6099b.gif", "C": "CD6099c.gif", "D": "CD6099d.gif"},
-  "6481": {"A": "CD6481a.gif", "B": "CD6481b.gif", "C": "CD6481c.gif", "D": "CD6481d.gif"},
-  "6486": {"A": "CD6486a.gif", "B": "CD6486b.gif", "C": "CD6486c.gif", "D": "CD6486d.gif"},
-  "6488": {"A": "CD6488a.gif", "B": "CD6488b.gif", "C": "CD6488c.gif", "D": "CD6488d.gif"},
-  "6492": {"A": "CD6492a.gif", "B": "CD6492b.gif", "C": "CD6492c.gif", "D": "CD6492d.gif"},
-  "6540": {"A": "CD6540a.gif", "B": "CD6540b.gif", "C": "CD6540c.gif", "D": "CD6540d.gif"},
-  "6541": {"A": "CD6541a.gif", "B": "CD6541b.gif", "C": "CD6541c.gif", "D": "CD6541d.gif"}
-};
 
     const ALL_TOPICS = [
       "Braking systems","Carrying passengers","Drivers' hours and rest periods",
@@ -1438,11 +1399,9 @@
     const PRICE_LABEL = '£14.14'; // TODO: set your real Lorry & Bus price to match STRIPE_PRICE_ID_LORRY_BUS
 
     let cfg = {
-  darkMode: false, timerDefault: 5, autoReveal: true, shuffle: false,
-  vehicleType: 'all', topic: 'all', lang: 'both',
-  imagesPath: CONFIG.API_BASE + '/images',  // ← ADD THIS
-  showImages: true  // ← AND THIS (if not already there)
-};
+      darkMode: false, timerDefault: 5, autoReveal: true, shuffle: false,
+      vehicleType: 'all', topic: 'all', lang: 'both'
+    };
     function loadCfg() {
       try { const s = JSON.parse(localStorage.getItem('lb_cfg') || 'null'); if (s) cfg = { ...cfg, ...s }; } catch (e) {}
     }
@@ -1676,15 +1635,7 @@
       document.getElementById('studyLockedView').style.display = !termsOk ? 'block' : 'none';
       document.getElementById('studyView').style.display = !termsOk ? 'none' : 'block';
     }
-    function enforceScrollLock() {
-      const subscribed = isFullyUnlocked();
-      const termsOk = hasAcceptedTerms();
-      document.getElementById('scrollLock').style.display = termsOk && !subscribed ? 'inline' : 'none';
-      document.getElementById('scrollLockedView').style.display = !termsOk ? 'block' : 'none';
-      document.getElementById('scrollView').style.display = !termsOk ? 'none' : 'block';
-    }
     function tryOpenStudy() { switchTab(3); enforceStudyLock(); if (hasAcceptedTerms()) { buildStudyList(); studyCur = 0; renderStudySingle(); } }
-    function tryOpenScroll() { switchTab(4); enforceScrollLock(); if (hasAcceptedTerms()) buildScrollPanel(); }
 
     function checkAgree() {
       const ok = document.getElementById('agreeCheck').checked && document.getElementById('ageCheck').checked;
@@ -1993,15 +1944,11 @@
         if (studyTimerCD <= 0) { if (studyCur < SQ.length-1) { studyCur++; renderStudySingle(); resetStudyCD(); } else pauseStudyTimer(); }
       }, 1000);
     }
-    function renderStudySingle() {
-      if (!SQ.length) { document.getElementById('studyBody').innerHTML = '<p style="padding:20px;text-align:center;color:var(--text3)">No questions match the current filters.</p>'; return; }
-      const q = SQ[studyCur];
-      document.getElementById('studyCounter').textContent = `Question ${studyCur+1} / ${SQ.length}`;
-      document.getElementById('studyProgressBar').style.width = `${((studyCur+1)/SQ.length)*100}%`;
-      document.getElementById('studyBtnPrev').disabled = studyCur===0;
-      document.getElementById('studyBtnNext').disabled = studyCur===SQ.length-1;
-      document.getElementById('studyGotoInput').max = SQ.length;
 
+    // Shared renderer: builds the "study card" markup for a single question object.
+    // Used by both Study mode (renderStudySingle) and the Scroll panel (buildScrollPanel),
+    // so the two views look identical.
+    function buildStudyCardHTML(q) {
       const isMulti = !!q.multi;
       const corr = q.correct_answer;
       let opH = '';
@@ -2011,25 +1958,42 @@
         opH += `<div class="${cls}"><div class="opt-badge">${opt.letter.toUpperCase()}</div><div>${optLang(opt.en, opt.ta)}</div></div>`;
       }
       let qH = '';
-      if (cfg.lang === 'ta') qH = `<div class="q-en" style="color:var(--text)">${esc(q.question_ta)}</div>`;
-      else if (cfg.lang === 'en') qH = `<div class="q-en">${esc(q.question_en)}</div>`;
-      else qH = `<div class="q-en">${esc(q.question_en)}</div><div class="q-ta" style="margin-top:5px">${esc(q.question_ta)}</div>`;
+      if (cfg.lang === 'ta') qH = `<div class="study-q-en" style="color:var(--text)">${esc(q.question_ta)}</div>`;
+      else if (cfg.lang === 'en') qH = `<div class="study-q-en">${esc(q.question_en)}</div>`;
+      else qH = `<div class="study-q-en">${esc(q.question_en)}</div><div class="study-q-ta">${esc(q.question_ta)}</div>`;
       const correctLabel = isMulti ? corrArr(corr).map(c=>c.toUpperCase()).join(', ') : (corr?corr.toUpperCase():'');
       const exEnH = q.explanation_en && cfg.lang !== 'ta' ? `<p class="expl-en"> ${esc(q.explanation_en)}</p>` : '';
       const exTaH = q.explanation_ta && cfg.lang !== 'en' ? `<p class="expl-ta"> ${esc(q.explanation_ta)}</p>` : '';
 
-      document.getElementById('studyBody').innerHTML = `
-        <div class="q-body">${qH}</div>
-        <div class="options-wrap">${opH}</div>
-        <div class="answer-banner show">✓ Correct answer: ${correctLabel}</div>
-        <div class="explanation show">${exEnH}${exTaH}</div>`;
+      return `
+        <div class="study-card-head">
+          <div class="scroll-q-num-row">
+            <div class="study-q-num">Q${q.number}</div>
+            <span class="scroll-q-topic">${esc(q.topic || '')}</span>
+          </div>
+          ${qH}
+        </div>
+        <div class="study-opts">${opH}</div>
+        <div class="study-correct-badge">✓ Correct answer: ${correctLabel}</div>
+        <div class="study-expl">${exEnH}${exTaH}</div>`;
+    }
+
+    function renderStudySingle() {
+      if (!SQ.length) { document.getElementById('studyBody').innerHTML = '<p style="padding:20px;text-align:center;color:var(--text3)">No questions match the current filters.</p>'; return; }
+      const q = SQ[studyCur];
+      document.getElementById('studyCounter').textContent = `Question ${studyCur+1} / ${SQ.length}`;
+      document.getElementById('studyProgressBar').style.width = `${((studyCur+1)/SQ.length)*100}%`;
+      document.getElementById('studyBtnPrev').disabled = studyCur===0;
+      document.getElementById('studyBtnNext').disabled = studyCur===SQ.length-1;
+      document.getElementById('studyGotoInput').max = SQ.length;
+      document.getElementById('studyBody').innerHTML = buildStudyCardHTML(q);
     }
 
     // ── Zoom ──────────────────────────────────────────────────
     let zoomLevel = 100;
     const ZOOM_STEPS = [70,80,90,100,110,120,130,140,150];
     function applyZoom() {
-      document.querySelectorAll('.q-body,.options-wrap,.explanation').forEach(el => el.style.fontSize = (zoomLevel/100) + 'em');
+      document.querySelectorAll('.q-body,.options-wrap,.explanation,.study-card-head,.study-opts,.study-expl').forEach(el => el.style.fontSize = (zoomLevel/100) + 'em');
       ['zoomLevelBadge','studyZoomBadge','scrollZoomBadge'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent = zoomLevel+'%'; });
     }
     function adjustZoom(dir) {
@@ -2039,9 +2003,7 @@
     }
     function resetZoom() { zoomLevel = 100; applyZoom(); }
 
-    // ── Auto-scroll ───────────────────────────────────────────
-    
- // ── Scroll Panel ─────────────────────────────────────────
+    // ── Scroll Panel (now rendered as a vertical stack of study-style cards) ──
     let scrollRAF = null;
     let scrollRunning = false;
     let scrollSpeed = 2;  // slider value 1-10
@@ -2064,91 +2026,50 @@
     }
 
     function buildScrollPanel() {
-  const inner = document.getElementById('scrollInner');
-  if (!inner) return;
-  inner.innerHTML = '';
+      const inner = document.getElementById('scrollInner');
+      if (!inner) return;
+      inner.innerHTML = '';
 
-  const subscribed      = isFullyUnlocked();
-  const questionsToShow = subscribed ? SQ : SQ.slice(0, FREE_STUDY_LIMIT);
+      // Scroll panel shares the same question list/filtering as Study mode.
+      if (!SQ.length) buildStudyList();
 
-  document.getElementById('scrollCounter').textContent = subscribed
-    ? SQ.length + ' questions'
-    : 'Showing ' + Math.min(FREE_STUDY_LIMIT, SQ.length) + ' of ' + SQ.length + ' questions (Free Preview)';
+      const subscribed      = isFullyUnlocked();
+      const questionsToShow = subscribed ? SQ : SQ.slice(0, FREE_STUDY_LIMIT);
 
-  questionsToShow.forEach((q) => {
-    const corr    = q.correct_answer;
-    const optImgs = OPTION_IMAGES[String(q.number)] || null;
-    let qText = '';
-    if (cfg.lang !== 'ta') qText += `<div class="scroll-q-text">${esc(q.question_en)}</div>`;
-    if (cfg.lang !== 'en') qText += `<div class="scroll-q-ta">${esc(q.question_ta)}</div>`;
-    
-    // --- ADD THIS: Question image (if any) ---
-    let qImgH = '';
-    if (cfg.showImages && q.image_file) {
-        qImgH = `<img src="${esc(cfg.imagesPath + '/' + q.image_file)}" style="max-width:100%;border-radius:6px;margin:6px 0" onerror="this.style.display='none'">`;
+      document.getElementById('scrollCounter').textContent = subscribed
+        ? SQ.length + ' questions'
+        : 'Showing ' + Math.min(FREE_STUDY_LIMIT, SQ.length) + ' of ' + SQ.length + ' questions (Free Preview)';
+
+      questionsToShow.forEach((q) => {
+        const card = document.createElement('div');
+        card.className = 'study-single-card';
+        card.innerHTML = buildStudyCardHTML(q);
+        inner.appendChild(card);
+      });
+
+      // After the free preview limit — show a full-access upsell card, styled to match.
+      if (!subscribed) {
+        const lockCard = document.createElement('div');
+        lockCard.className = 'study-single-card';
+        lockCard.style.cssText = 'border:2px dashed var(--accent);padding:32px 20px;text-align:center;box-shadow:none;';
+        const loggedIn = isLoggedIn();
+        const btnLabel = loggedIn ? '🔓 Get Full Access →' : '✍️ Register for Full Access →';
+        const btnAction = loggedIn ? 'openSubscribe()' : 'goToRegister()';
+        lockCard.innerHTML = `
+          <div style="font-size:2.2rem;margin-bottom:10px">🔒</div>
+          <div style="font-weight:700;font-size:1rem;color:var(--text);margin-bottom:8px">Get Full Access to See All ${SQ.length} Questions</div>
+          <div style="font-size:.84rem;color:var(--text2);margin-bottom:16px">You have previewed the first <strong>${Math.min(FREE_STUDY_LIMIT,SQ.length)}</strong> questions for free.<br>Get full access to unlock the full Scroll panel.</div>
+          <button onclick="${btnAction}" style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:11px 26px;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;">${btnLabel}</button>
+        `;
+        inner.appendChild(lockCard);
+      } else {
+        const endMsg = document.createElement('div');
+        endMsg.className = 'scroll-end-msg';
+        endMsg.textContent = '— End of questions —';
+        inner.appendChild(endMsg);
+      }
+      resetScroll();
     }
-    
-    const optsH = q.options.map(opt => {
-        const isCorr = opt.letter === corr;
-        let label = '';
-        if (cfg.lang !== 'ta') label += `<span>${esc(opt.en)}</span>`;
-        if (cfg.lang !== 'en' && opt.ta) label += `<span style="display:block;font-size:.75rem;color:var(--text3)">${esc(opt.ta)}</span>`;
-        
-        // --- ADD THIS: Option image (if any) ---
-        let optImgH = '';
-        if (cfg.showImages && optImgs && optImgs[opt.letter.toUpperCase()]) {
-            const oSrc = cfg.imagesPath + '/' + optImgs[opt.letter.toUpperCase()];
-            optImgH = `<img src="${esc(oSrc)}" style="max-width:100%;max-height:80px;border-radius:4px;margin-top:4px;display:block" onerror="this.style.display='none'">`;
-        }
-        
-        return `<div class="scroll-opt${isCorr?' scroll-correct':''}">
-                    <span class="scroll-opt-badge">${opt.letter.toUpperCase()}</span>
-                    <div>${label}${optImgH}</div>
-                </div>`;
-    }).join('');
-    
-    let expl = '';
-    if (q.explanation_en && cfg.lang !== 'ta') expl += `<div class="scroll-expl">${esc(q.explanation_en)}</div>`;
-    if (q.explanation_ta && cfg.lang !== 'en') expl += `<div class="scroll-expl">${esc(q.explanation_ta)}</div>`;
-    
-    const cat = getCategoryForQ(q);
-    const catH = cat ? `<span style="font-size:.66rem;color:var(--text3);margin-left:6px">· ${esc(cat.label)}</span>` : '';
-    
-    const card = document.createElement('div');
-    card.className = 'scroll-q-card';
-    card.innerHTML = `
-        <div class="scroll-q-num">Q${q.number}${catH}</div>
-        ${qText}
-        ${qImgH}
-        <div class="scroll-opts">${optsH}</div>
-        <span class="scroll-answer-badge">✓ Answer: ${corr ? corr.toUpperCase() : 'N/A'}</span>
-        ${expl}
-    `;
-    inner.appendChild(card);
-});
-
-  // After Q10 for free users — show full-access card
-  if (!subscribed) {
-    const lockCard = document.createElement('div');
-    lockCard.style.cssText = 'background:var(--surface);border:2px dashed var(--accent);border-radius:var(--radius);margin:16px 0;padding:32px 20px;text-align:center;';
-    const loggedIn = isLoggedIn();
-    const btnLabel = loggedIn ? '🔓 Get Full Access →' : '✍️ Register for Full Access →';
-    const btnAction = loggedIn ? 'openSubscribe()' : 'goToRegister()';
-    lockCard.innerHTML = `
-      <div style="font-size:2.2rem;margin-bottom:10px">🔒</div>
-      <div style="font-weight:700;font-size:1rem;color:var(--text);margin-bottom:8px">Get Full Access to See All ${SQ.length} Questions</div>
-      <div style="font-size:.84rem;color:var(--text2);margin-bottom:16px">You have previewed the first <strong>${Math.min(FREE_STUDY_LIMIT,SQ.length)}</strong> questions for free.<br>Get full access to unlock the full Scroll panel.</div>
-      <button onclick="${btnAction}" style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:11px 26px;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;">${btnLabel}</button>
-    `;
-    inner.appendChild(lockCard);
-  } else {
-    const endMsg = document.createElement('div');
-    endMsg.className = 'scroll-end-msg';
-    endMsg.textContent = '— End of questions —';
-    inner.appendChild(endMsg);
-  }
-  resetScroll();
-}
 
     function updateScrollSpeed() {
       scrollSpeed = parseInt(document.getElementById('scrollSpeedSlider').value) || 2;
