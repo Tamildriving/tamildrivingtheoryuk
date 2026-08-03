@@ -1407,6 +1407,25 @@
     // ── Backend config ──────────────────────────────────────
     const CONFIG = { API_BASE: 'https://theory-test-backend-production.up.railway.app' };
     const LB_API = CONFIG.API_BASE + '/api/lorry-bus';
+    const OPTION_IMAGES = {
+  "6769": {"A": "CD6769a.gif", "B": "CD6769b.gif", "C": "CD6769c.gif", "D": "CD6769d.gif"},
+  "6971": {"A": "CD6971a.gif", "B": "CD6971b.gif", "C": "CD6971c.gif", "D": "CD6971d.gif"},
+  "7218": {"A": "CD7218a.gif", "B": "CD7218b.gif", "C": "CD7218c.gif", "D": "CD7218d.gif"},
+  "5106": {"A": "CC5106a.gif", "B": "CC5106b.gif", "C": "CC5106c.gif", "D": "CC5106d.gif"},
+  "5214": {"A": "CC5214a.gif", "B": "CC5214b.gif", "C": "CC5214c.gif", "D": "CC5214d.gif"},
+  "5256": {"A": "CC5256a.gif", "B": "CC5256b.gif", "C": "CC5256c.gif", "D": "CC5256d.gif"},
+  "5360": {"A": "CC5360a.gif", "B": "CC5360b.gif", "C": "CC5360c.gif", "D": "CC5360d.gif"},
+  "5447": {"A": "CC5447a.gif", "B": "CC5447b.gif", "C": "CC5447c.gif", "D": "CC5447d.gif"},
+  "5449": {"A": "CC5449a.gif", "B": "CC5449b.gif", "C": "CC5449c.gif", "D": "CC5449d.gif"},
+  "5450": {"A": "CC5450a.gif", "B": "CC5450b.gif", "C": "CC5450c.gif", "D": "CC5450d.gif"},
+  "6099": {"A": "CD6099a.gif", "B": "CD6099b.gif", "C": "CD6099c.gif", "D": "CD6099d.gif"},
+  "6481": {"A": "CD6481a.gif", "B": "CD6481b.gif", "C": "CD6481c.gif", "D": "CD6481d.gif"},
+  "6486": {"A": "CD6486a.gif", "B": "CD6486b.gif", "C": "CD6486c.gif", "D": "CD6486d.gif"},
+  "6488": {"A": "CD6488a.gif", "B": "CD6488b.gif", "C": "CD6488c.gif", "D": "CD6488d.gif"},
+  "6492": {"A": "CD6492a.gif", "B": "CD6492b.gif", "C": "CD6492c.gif", "D": "CD6492d.gif"},
+  "6540": {"A": "CD6540a.gif", "B": "CD6540b.gif", "C": "CD6540c.gif", "D": "CD6540d.gif"},
+  "6541": {"A": "CD6541a.gif", "B": "CD6541b.gif", "C": "CD6541c.gif", "D": "CD6541d.gif"}
+};
 
     const ALL_TOPICS = [
       "Braking systems","Carrying passengers","Drivers' hours and rest periods",
@@ -1419,9 +1438,11 @@
     const PRICE_LABEL = '£14.14'; // TODO: set your real Lorry & Bus price to match STRIPE_PRICE_ID_LORRY_BUS
 
     let cfg = {
-      darkMode: false, timerDefault: 5, autoReveal: true, shuffle: false,
-      vehicleType: 'all', topic: 'all', lang: 'both'
-    };
+  darkMode: false, timerDefault: 5, autoReveal: true, shuffle: false,
+  vehicleType: 'all', topic: 'all', lang: 'both',
+  imagesPath: CONFIG.API_BASE + '/images',  // ← ADD THIS
+  showImages: true  // ← AND THIS (if not already there)
+};
     function loadCfg() {
       try { const s = JSON.parse(localStorage.getItem('lb_cfg') || 'null'); if (s) cfg = { ...cfg, ...s }; } catch (e) {}
     }
@@ -2060,25 +2081,51 @@
     let qText = '';
     if (cfg.lang !== 'ta') qText += `<div class="scroll-q-text">${esc(q.question_en)}</div>`;
     if (cfg.lang !== 'en') qText += `<div class="scroll-q-ta">${esc(q.question_ta)}</div>`;
+    
+    // --- ADD THIS: Question image (if any) ---
+    let qImgH = '';
+    if (cfg.showImages && q.image_file) {
+        qImgH = `<img src="${esc(cfg.imagesPath + '/' + q.image_file)}" style="max-width:100%;border-radius:6px;margin:6px 0" onerror="this.style.display='none'">`;
+    }
+    
     const optsH = q.options.map(opt => {
-      const isCorr = opt.letter === corr;
-      let label = '';
-      if (cfg.lang !== 'ta') label += `<span>${esc(opt.en)}</span>`;
-      if (cfg.lang !== 'en' && opt.ta) label += `<span style="display:block;font-size:.75rem;color:var(--text3)">${esc(opt.ta)}</span>`;
-      return `<div class="scroll-opt${isCorr?' scroll-correct':''}"><span class="scroll-opt-badge">${opt.letter.toUpperCase()}</span><div>${label}</div></div>`;
+        const isCorr = opt.letter === corr;
+        let label = '';
+        if (cfg.lang !== 'ta') label += `<span>${esc(opt.en)}</span>`;
+        if (cfg.lang !== 'en' && opt.ta) label += `<span style="display:block;font-size:.75rem;color:var(--text3)">${esc(opt.ta)}</span>`;
+        
+        // --- ADD THIS: Option image (if any) ---
+        let optImgH = '';
+        if (cfg.showImages && optImgs && optImgs[opt.letter.toUpperCase()]) {
+            const oSrc = cfg.imagesPath + '/' + optImgs[opt.letter.toUpperCase()];
+            optImgH = `<img src="${esc(oSrc)}" style="max-width:100%;max-height:80px;border-radius:4px;margin-top:4px;display:block" onerror="this.style.display='none'">`;
+        }
+        
+        return `<div class="scroll-opt${isCorr?' scroll-correct':''}">
+                    <span class="scroll-opt-badge">${opt.letter.toUpperCase()}</span>
+                    <div>${label}${optImgH}</div>
+                </div>`;
     }).join('');
+    
     let expl = '';
-    if (q.explanation_en && cfg.lang !== 'ta') expl += `<div class="scroll-expl"> ${esc(q.explanation_en)}</div>`;
+    if (q.explanation_en && cfg.lang !== 'ta') expl += `<div class="scroll-expl">${esc(q.explanation_en)}</div>`;
     if (q.explanation_ta && cfg.lang !== 'en') expl += `<div class="scroll-expl">${esc(q.explanation_ta)}</div>`;
-    let imgH = '';
-    if (cfg.showImages && q.image_file) imgH = `<img src="${esc(cfg.imagesPath+'/'+q.image_file)}" style="max-width:100%;border-radius:6px;margin:6px 0" onerror="this.style.display='none'">`;
-    const cat  = getCategoryForQ(q);
+    
+    const cat = getCategoryForQ(q);
     const catH = cat ? `<span style="font-size:.66rem;color:var(--text3);margin-left:6px">· ${esc(cat.label)}</span>` : '';
+    
     const card = document.createElement('div');
     card.className = 'scroll-q-card';
-    card.innerHTML = `<div class="scroll-q-num">Q${q.number}${catH}</div>${qText}${imgH}<div class="scroll-opts">${optsH}</div><span class="scroll-answer-badge">✓ Answer: ${corr?corr.toUpperCase():'N/A'}</span>${expl}`;
+    card.innerHTML = `
+        <div class="scroll-q-num">Q${q.number}${catH}</div>
+        ${qText}
+        ${qImgH}
+        <div class="scroll-opts">${optsH}</div>
+        <span class="scroll-answer-badge">✓ Answer: ${corr ? corr.toUpperCase() : 'N/A'}</span>
+        ${expl}
+    `;
     inner.appendChild(card);
-  });
+});
 
   // After Q10 for free users — show full-access card
   if (!subscribed) {
