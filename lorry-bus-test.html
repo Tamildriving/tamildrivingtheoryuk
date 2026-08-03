@@ -2019,57 +2019,126 @@
     function resetZoom() { zoomLevel = 100; applyZoom(); }
 
     // ── Auto-scroll ───────────────────────────────────────────
-    let scrollRAF = null, scrollRunning = false, scrollSpeed = 2, scrollAccum = 0.0;
-    function buildScrollPanel() {
-      const pool = getTopicFilteredQuestions(getFilteredQuestions()).slice().sort((a,b)=>a.number-b.number);
-      const inner = document.getElementById('scrollInner');
-      inner.innerHTML = pool.map(q => {
-        const isMulti = !!q.multi;
-        const corr = q.correct_answer;
-        const correctLabel = isMulti ? corrArr(corr).map(c=>c.toUpperCase()).join(', ') : (corr?corr.toUpperCase():'');
-        const correctOpt = q.options.find(o => isMulti ? corrArr(corr).includes(o.letter) : o.letter===corr);
-        return `<div style="padding:14px 4px;border-bottom:1px solid var(--border);">
-          <div style="font-size:.7rem;color:var(--text3);margin-bottom:4px;">Q${q.number} · ${esc(q.topic)}</div>
-          <div class="q-en">${esc(q.question_en)}</div>
-          <div style="margin-top:6px;font-size:.85rem;color:var(--accent2);font-weight:700;">✓ ${correctLabel} — ${correctOpt?esc(correctOpt.en):''}</div>
-        </div>`;
-      }).join('');
+    
+let scrollRAF = null, scrollRunning = false, scrollSpeed = 2, scrollAccum = 0.0;
+
+function buildScrollPanel() {
+  const pool = getTopicFilteredQuestions(getFilteredQuestions()).slice().sort((a,b)=>a.number-b.number);
+  const inner = document.getElementById('scrollInner');
+  inner.innerHTML = pool.map(q => {
+    const isMulti = !!q.multi;
+    const corr = q.correct_answer;
+    const correctLabel = isMulti ? corrArr(corr).map(c=>c.toUpperCase()).join(', ') : (corr?corr.toUpperCase():'');
+    const correctOpt = q.options.find(o => isMulti ? corrArr(corr).includes(o.letter) : o.letter===corr);
+    
+    // Build question text with language support
+    let qText = '';
+    if (cfg.lang === 'ta') {
+      qText = `<div style="font-size:.92rem;line-height:1.4;margin-bottom:6px;">${esc(q.question_ta)}</div>`;
+    } else if (cfg.lang === 'en') {
+      qText = `<div style="font-size:.92rem;line-height:1.4;margin-bottom:6px;">${esc(q.question_en)}</div>`;
+    } else {
+      qText = `
+        <div style="font-size:.92rem;line-height:1.4;margin-bottom:4px;">${esc(q.question_en)}</div>
+        <div style="font-size:.84rem;color:var(--text3);line-height:1.4;margin-bottom:6px;">${esc(q.question_ta)}</div>
+      `;
     }
-    function updateScrollSpeed() {
-      scrollSpeed = parseInt(document.getElementById('scrollSpeedSlider').value);
-      const labels = ['','Very Slow','Slow','Slow','Medium','Medium','Medium','Fast','Fast','Very Fast','Very Fast'];
-      document.getElementById('scrollSpeedLabel').textContent = labels[scrollSpeed] || 'Medium';
+    
+    // Build options with bilingual support
+    let optsHtml = '';
+    for (const opt of q.options) {
+      let optText = '';
+      if (cfg.lang === 'ta') {
+        optText = esc(opt.ta);
+      } else if (cfg.lang === 'en') {
+        optText = esc(opt.en);
+      } else {
+        optText = `${esc(opt.en)} <span style="color:var(--text3);font-size:.85em;">/ ${esc(opt.ta)}</span>`;
+      }
+      const isCorrect = isMulti ? corrArr(corr).includes(opt.letter) : opt.letter === corr;
+      optsHtml += `
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 10px;border-radius:8px;font-size:.82rem;background:var(--surface2);border:1px solid ${isCorrect ? 'var(--accent2)' : 'var(--border)'};">
+          <span style="font-weight:700;color:${isCorrect ? 'var(--accent2)' : 'var(--accent)'};min-width:18px;">${opt.letter.toUpperCase()}.</span>
+          <span>${optText}</span>
+          ${isCorrect ? `<span style="margin-left:auto;color:var(--accent2);font-weight:700;">✓</span>` : ''}
+        </div>
+      `;
     }
-    function startScroll() {
-      scrollRunning = true;
-      document.getElementById('scrollBtnStart').style.display='none';
-      document.getElementById('scrollBtnPause').style.display='inline-flex';
-      document.getElementById('scrollStatus').textContent='Running';
-      scrollStep();
+    
+    // Build explanation with bilingual support
+    let explText = '';
+    if (cfg.lang === 'ta') {
+      explText = esc(q.explanation_ta || '');
+    } else if (cfg.lang === 'en') {
+      explText = esc(q.explanation_en || '');
+    } else {
+      explText = `
+        <div style="font-size:.82rem;color:var(--text2);margin-bottom:4px;">${esc(q.explanation_en)}</div>
+        <div style="font-size:.78rem;color:var(--text3);">${esc(q.explanation_ta)}</div>
+      `;
     }
-    function scrollStep() {
-      if (!scrollRunning) return;
-      const container = document.getElementById('scrollContainer');
-      scrollAccum += scrollSpeed * 0.4;
-      if (scrollAccum >= 1) { container.scrollTop += Math.floor(scrollAccum); scrollAccum -= Math.floor(scrollAccum); }
-      const pct = container.scrollHeight > container.clientHeight
-        ? (container.scrollTop / (container.scrollHeight - container.clientHeight)) * 100 : 0;
-      document.getElementById('scrollProgressBar').style.width = pct + '%';
-      if (container.scrollTop + container.clientHeight >= container.scrollHeight - 2) { pauseScroll(); return; }
-      scrollRAF = requestAnimationFrame(scrollStep);
-    }
-    function pauseScroll() {
-      scrollRunning = false; cancelAnimationFrame(scrollRAF);
-      document.getElementById('scrollBtnStart').style.display='inline-flex';
-      document.getElementById('scrollBtnPause').style.display='none';
-      document.getElementById('scrollStatus').textContent='Paused';
-    }
-    function resetScroll() {
-      pauseScroll();
-      document.getElementById('scrollContainer').scrollTop = 0;
-      document.getElementById('scrollProgressBar').style.width = '0%';
-      document.getElementById('scrollStatus').textContent = 'Idle';
-    }
+    
+    return `
+      <div style="padding:16px 4px;border-bottom:2px solid var(--border);margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:.7rem;color:var(--text3);font-weight:700;">Q${q.number}</span>
+          <span style="font-size:.65rem;color:var(--text3);background:var(--surface2);padding:2px 10px;border-radius:12px;">${esc(q.topic)}</span>
+        </div>
+        
+        ${qText}
+        
+        <div style="margin:8px 0 6px;display:flex;flex-direction:column;gap:4px;">
+          ${optsHtml}
+        </div>
+        
+        <div style="margin-top:8px;padding:10px 12px;background:var(--correct-bg);border-radius:8px;border-left:3px solid var(--accent2);">
+          <div style="font-size:.75rem;font-weight:700;color:var(--accent2);margin-bottom:4px;">✅ Correct Answer: ${correctLabel}</div>
+          <div style="font-size:.78rem;color:var(--text2);">${explText}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateScrollSpeed() {
+  scrollSpeed = parseInt(document.getElementById('scrollSpeedSlider').value);
+  const labels = ['','Very Slow','Slow','Slow','Medium','Medium','Medium','Fast','Fast','Very Fast','Very Fast'];
+  document.getElementById('scrollSpeedLabel').textContent = labels[scrollSpeed] || 'Medium';
+}
+
+function startScroll() {
+  scrollRunning = true;
+  document.getElementById('scrollBtnStart').style.display='none';
+  document.getElementById('scrollBtnPause').style.display='inline-flex';
+  document.getElementById('scrollStatus').textContent='Running';
+  scrollStep();
+}
+
+function scrollStep() {
+  if (!scrollRunning) return;
+  const container = document.getElementById('scrollContainer');
+  scrollAccum += scrollSpeed * 0.4;
+  if (scrollAccum >= 1) { container.scrollTop += Math.floor(scrollAccum); scrollAccum -= Math.floor(scrollAccum); }
+  const pct = container.scrollHeight > container.clientHeight
+    ? (container.scrollTop / (container.scrollHeight - container.clientHeight)) * 100 : 0;
+  document.getElementById('scrollProgressBar').style.width = pct + '%';
+  if (container.scrollTop + container.clientHeight >= container.scrollHeight - 2) { pauseScroll(); return; }
+  scrollRAF = requestAnimationFrame(scrollStep);
+}
+
+function pauseScroll() {
+  scrollRunning = false; cancelAnimationFrame(scrollRAF);
+  document.getElementById('scrollBtnStart').style.display='inline-flex';
+  document.getElementById('scrollBtnPause').style.display='none';
+  document.getElementById('scrollStatus').textContent='Paused';
+}
+
+function resetScroll() {
+  pauseScroll();
+  document.getElementById('scrollContainer').scrollTop = 0;
+  document.getElementById('scrollProgressBar').style.width = '0%';
+  document.getElementById('scrollStatus').textContent = 'Idle';
+}
 
     // ── Watermark (reused pattern from Car app) ─────────────────
     function buildWatermarkOverlay(label) {
