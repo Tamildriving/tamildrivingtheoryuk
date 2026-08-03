@@ -2020,125 +2020,157 @@
 
     // ── Auto-scroll ───────────────────────────────────────────
     
-let scrollRAF = null, scrollRunning = false, scrollSpeed = 2, scrollAccum = 0.0;
+ // ── Scroll Panel ─────────────────────────────────────────
+    let scrollRAF = null;
+    let scrollRunning = false;
+    let scrollSpeed = 2;  // slider value 1-10
+    let scrollAccum = 0.0;    // sub-pixel accumulator for smooth slow scroll
 
-function buildScrollPanel() {
-  const pool = getTopicFilteredQuestions(getFilteredQuestions()).slice().sort((a,b)=>a.number-b.number);
-  const inner = document.getElementById('scrollInner');
-  inner.innerHTML = pool.map(q => {
-    const isMulti = !!q.multi;
-    const corr = q.correct_answer;
-    const correctLabel = isMulti ? corrArr(corr).map(c=>c.toUpperCase()).join(', ') : (corr?corr.toUpperCase():'');
-    const correctOpt = q.options.find(o => isMulti ? corrArr(corr).includes(o.letter) : o.letter===corr);
-    
-    // Build question text with language support
-    let qText = '';
-    if (cfg.lang === 'ta') {
-      qText = `<div style="font-size:.92rem;line-height:1.4;margin-bottom:6px;">${esc(q.question_ta)}</div>`;
-    } else if (cfg.lang === 'en') {
-      qText = `<div style="font-size:.92rem;line-height:1.4;margin-bottom:6px;">${esc(q.question_en)}</div>`;
-    } else {
-      qText = `
-        <div style="font-size:.92rem;line-height:1.4;margin-bottom:4px;">${esc(q.question_en)}</div>
-        <div style="font-size:.84rem;color:var(--text3);line-height:1.4;margin-bottom:6px;">${esc(q.question_ta)}</div>
-      `;
+    function enforceScrollLock() {
+      const subscribed = isFullyUnlocked();
+      const termsOk    = hasAcceptedTerms();
+      document.getElementById('scrollLock').style.display       = termsOk && !subscribed ? 'inline' : 'none';
+      document.getElementById('scrollLockedView').style.display = !termsOk ? 'block' : 'none';
+      document.getElementById('scrollView').style.display       = !termsOk ? 'none'  : 'block';
     }
-    
-    // Build options with bilingual support
-    let optsHtml = '';
-    for (const opt of q.options) {
-      let optText = '';
-      if (cfg.lang === 'ta') {
-        optText = esc(opt.ta);
-      } else if (cfg.lang === 'en') {
-        optText = esc(opt.en);
-      } else {
-        optText = `${esc(opt.en)} <span style="color:var(--text3);font-size:.85em;">/ ${esc(opt.ta)}</span>`;
+
+    function tryOpenScroll() {
+      switchTab(4);
+      enforceScrollLock();
+      if (hasAcceptedTerms()) {
+        buildScrollPanel();
       }
-      const isCorrect = isMulti ? corrArr(corr).includes(opt.letter) : opt.letter === corr;
-      optsHtml += `
-        <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 10px;border-radius:8px;font-size:.82rem;background:var(--surface2);border:1px solid ${isCorrect ? 'var(--accent2)' : 'var(--border)'};">
-          <span style="font-weight:700;color:${isCorrect ? 'var(--accent2)' : 'var(--accent)'};min-width:18px;">${opt.letter.toUpperCase()}.</span>
-          <span>${optText}</span>
-          ${isCorrect ? `<span style="margin-left:auto;color:var(--accent2);font-weight:700;">✓</span>` : ''}
-        </div>
-      `;
     }
-    
-    // Build explanation with bilingual support
-    let explText = '';
-    if (cfg.lang === 'ta') {
-      explText = esc(q.explanation_ta || '');
-    } else if (cfg.lang === 'en') {
-      explText = esc(q.explanation_en || '');
-    } else {
-      explText = `
-        <div style="font-size:.82rem;color:var(--text2);margin-bottom:4px;">${esc(q.explanation_en)}</div>
-        <div style="font-size:.78rem;color:var(--text3);">${esc(q.explanation_ta)}</div>
-      `;
-    }
-    
-    return `
-      <div style="padding:16px 4px;border-bottom:2px solid var(--border);margin-bottom:8px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="font-size:.7rem;color:var(--text3);font-weight:700;">Q${q.number}</span>
-          <span style="font-size:.65rem;color:var(--text3);background:var(--surface2);padding:2px 10px;border-radius:12px;">${esc(q.topic)}</span>
-        </div>
-        
-        ${qText}
-        
-        <div style="margin:8px 0 6px;display:flex;flex-direction:column;gap:4px;">
-          ${optsHtml}
-        </div>
-        
-        <div style="margin-top:8px;padding:10px 12px;background:var(--correct-bg);border-radius:8px;border-left:3px solid var(--accent2);">
-          <div style="font-size:.75rem;font-weight:700;color:var(--accent2);margin-bottom:4px;">✅ Correct Answer: ${correctLabel}</div>
-          <div style="font-size:.78rem;color:var(--text2);">${explText}</div>
-        </div>
-      </div>
+
+    function buildScrollPanel() {
+  const inner = document.getElementById('scrollInner');
+  if (!inner) return;
+  inner.innerHTML = '';
+
+  const subscribed      = isFullyUnlocked();
+  const questionsToShow = subscribed ? SQ : SQ.slice(0, FREE_STUDY_LIMIT);
+
+  document.getElementById('scrollCounter').textContent = subscribed
+    ? SQ.length + ' questions'
+    : 'Showing ' + Math.min(FREE_STUDY_LIMIT, SQ.length) + ' of ' + SQ.length + ' questions (Free Preview)';
+
+  questionsToShow.forEach((q) => {
+    const corr    = q.correct_answer;
+    const optImgs = OPTION_IMAGES[String(q.number)] || null;
+    let qText = '';
+    if (cfg.lang !== 'ta') qText += `<div class="scroll-q-text">${esc(q.question_en)}</div>`;
+    if (cfg.lang !== 'en') qText += `<div class="scroll-q-ta">${esc(q.question_ta)}</div>`;
+    const optsH = q.options.map(opt => {
+      const isCorr = opt.letter === corr;
+      let label = '';
+      if (cfg.lang !== 'ta') label += `<span>${esc(opt.en)}</span>`;
+      if (cfg.lang !== 'en' && opt.ta) label += `<span style="display:block;font-size:.75rem;color:var(--text3)">${esc(opt.ta)}</span>`;
+      return `<div class="scroll-opt${isCorr?' scroll-correct':''}"><span class="scroll-opt-badge">${opt.letter.toUpperCase()}</span><div>${label}</div></div>`;
+    }).join('');
+    let expl = '';
+    if (q.explanation_en && cfg.lang !== 'ta') expl += `<div class="scroll-expl"> ${esc(q.explanation_en)}</div>`;
+    if (q.explanation_ta && cfg.lang !== 'en') expl += `<div class="scroll-expl">${esc(q.explanation_ta)}</div>`;
+    let imgH = '';
+    if (cfg.showImages && q.image_file) imgH = `<img src="${esc(cfg.imagesPath+'/'+q.image_file)}" style="max-width:100%;border-radius:6px;margin:6px 0" onerror="this.style.display='none'">`;
+    const cat  = getCategoryForQ(q);
+    const catH = cat ? `<span style="font-size:.66rem;color:var(--text3);margin-left:6px">· ${esc(cat.label)}</span>` : '';
+    const card = document.createElement('div');
+    card.className = 'scroll-q-card';
+    card.innerHTML = `<div class="scroll-q-num">Q${q.number}${catH}</div>${qText}${imgH}<div class="scroll-opts">${optsH}</div><span class="scroll-answer-badge">✓ Answer: ${corr?corr.toUpperCase():'N/A'}</span>${expl}`;
+    inner.appendChild(card);
+  });
+
+  // After Q10 for free users — show full-access card
+  if (!subscribed) {
+    const lockCard = document.createElement('div');
+    lockCard.style.cssText = 'background:var(--surface);border:2px dashed var(--accent);border-radius:var(--radius);margin:16px 0;padding:32px 20px;text-align:center;';
+    const loggedIn = isLoggedIn();
+    const btnLabel = loggedIn ? '🔓 Get Full Access →' : '✍️ Register for Full Access →';
+    const btnAction = loggedIn ? 'openSubscribe()' : 'goToRegister()';
+    lockCard.innerHTML = `
+      <div style="font-size:2.2rem;margin-bottom:10px">🔒</div>
+      <div style="font-weight:700;font-size:1rem;color:var(--text);margin-bottom:8px">Get Full Access to See All ${SQ.length} Questions</div>
+      <div style="font-size:.84rem;color:var(--text2);margin-bottom:16px">You have previewed the first <strong>${Math.min(FREE_STUDY_LIMIT,SQ.length)}</strong> questions for free.<br>Get full access to unlock the full Scroll panel.</div>
+      <button onclick="${btnAction}" style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:11px 26px;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;">${btnLabel}</button>
     `;
-  }).join('');
+    inner.appendChild(lockCard);
+  } else {
+    const endMsg = document.createElement('div');
+    endMsg.className = 'scroll-end-msg';
+    endMsg.textContent = '— End of questions —';
+    inner.appendChild(endMsg);
+  }
+  resetScroll();
 }
 
-function updateScrollSpeed() {
-  scrollSpeed = parseInt(document.getElementById('scrollSpeedSlider').value);
-  const labels = ['','Very Slow','Slow','Slow','Medium','Medium','Medium','Fast','Fast','Very Fast','Very Fast'];
-  document.getElementById('scrollSpeedLabel').textContent = labels[scrollSpeed] || 'Medium';
-}
+    function updateScrollSpeed() {
+      scrollSpeed = parseInt(document.getElementById('scrollSpeedSlider').value) || 2;
+      const labels = {1:'Very Slow',2:'Slow',3:'Steady',4:'Moderate',5:'Medium',6:'Brisk',7:'Fast',8:'Faster',9:'Very Fast',10:'Max'};
+      document.getElementById('scrollSpeedLabel').textContent = labels[scrollSpeed] || 'Slow';
+    }
 
-function startScroll() {
-  scrollRunning = true;
-  document.getElementById('scrollBtnStart').style.display='none';
-  document.getElementById('scrollBtnPause').style.display='inline-flex';
-  document.getElementById('scrollStatus').textContent='Running';
-  scrollStep();
-}
+    function startScroll() {
+      if (scrollRunning) return;
+      scrollRunning = true;
+      scrollAccum = 0.0;
+      document.getElementById('scrollBtnStart').style.display = 'none';
+      document.getElementById('scrollBtnPause').style.display = '';
+      document.getElementById('scrollStatus').textContent = 'Scrolling';
+      scrollStep();
+    }
 
-function scrollStep() {
-  if (!scrollRunning) return;
-  const container = document.getElementById('scrollContainer');
-  scrollAccum += scrollSpeed * 0.4;
-  if (scrollAccum >= 1) { container.scrollTop += Math.floor(scrollAccum); scrollAccum -= Math.floor(scrollAccum); }
-  const pct = container.scrollHeight > container.clientHeight
-    ? (container.scrollTop / (container.scrollHeight - container.clientHeight)) * 100 : 0;
-  document.getElementById('scrollProgressBar').style.width = pct + '%';
-  if (container.scrollTop + container.clientHeight >= container.scrollHeight - 2) { pauseScroll(); return; }
-  scrollRAF = requestAnimationFrame(scrollStep);
-}
+    function scrollStep() {
+      if (!scrollRunning) return;
+      const el = document.getElementById('scrollContainer');
+      if (!el) return;
 
-function pauseScroll() {
-  scrollRunning = false; cancelAnimationFrame(scrollRAF);
-  document.getElementById('scrollBtnStart').style.display='inline-flex';
-  document.getElementById('scrollBtnPause').style.display='none';
-  document.getElementById('scrollStatus').textContent='Paused';
-}
+      // Sub-pixel accumulation: move every frame, no skipping = no flicker
+      // Speed 1 = 0.08px/frame (~5px/s), Speed 5 = 0.5px/frame (~30px/s), Speed 10 = 6px/frame
+      const pxPerFrame = scrollSpeed <= 5
+        ? 0.08 * scrollSpeed          // 0.08 → 0.40 px/frame for speeds 1-5
+        : (scrollSpeed - 5) * 1.2;   // 1.2 → 6.0 px/frame for speeds 6-10
+      scrollAccum += pxPerFrame;
+      if (scrollAccum >= 1) {
+        const move = Math.floor(scrollAccum);
+        el.scrollTop += move;
+        scrollAccum -= move;
+      }
 
-function resetScroll() {
-  pauseScroll();
-  document.getElementById('scrollContainer').scrollTop = 0;
-  document.getElementById('scrollProgressBar').style.width = '0%';
-  document.getElementById('scrollStatus').textContent = 'Idle';
-}
+      // Update progress bar
+      const maxScroll = el.scrollHeight - el.clientHeight;
+      const pct = maxScroll > 0 ? Math.min(100, (el.scrollTop / maxScroll) * 100) : 0;
+      const pb = document.getElementById('scrollProgressBar');
+      if (pb) pb.style.width = pct + '%';
+
+      // Stop at bottom
+      if (el.scrollTop >= maxScroll - 1) {
+        pauseScroll();
+        document.getElementById('scrollStatus').textContent = 'Reached end';
+        if (pb) pb.style.width = '100%';
+        return;
+      }
+
+      scrollRAF = requestAnimationFrame(scrollStep);
+    }
+
+    function pauseScroll() {
+      scrollRunning = false;
+      cancelAnimationFrame(scrollRAF);
+      document.getElementById('scrollBtnPause').style.display = 'none';
+      document.getElementById('scrollBtnStart').style.display = '';
+      if (document.getElementById('scrollStatus').textContent === 'Scrolling') {
+        document.getElementById('scrollStatus').textContent = 'Paused';
+      }
+    }
+
+    function resetScroll() {
+      pauseScroll();
+      const el = document.getElementById('scrollContainer');
+      if (el) el.scrollTop = 0;
+      const pb = document.getElementById('scrollProgressBar');
+      if (pb) pb.style.width = '0%';
+      document.getElementById('scrollStatus').textContent = 'Idle';
+    }
 
     // ── Watermark (reused pattern from Car app) ─────────────────
     function buildWatermarkOverlay(label) {
