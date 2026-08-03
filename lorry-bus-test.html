@@ -1388,6 +1388,64 @@
     const CONFIG = { API_BASE: 'https://theory-test-backend-production.up.railway.app' };
     const LB_API = CONFIG.API_BASE + '/api/lorry-bus';
 
+    // ── Question / option image assets ──────────────────────
+    // Base URL where the .gif image files live. Adjust this to wherever
+    // you actually host the images (e.g. a /public/images folder on the
+    // backend, a CDN, or an S3 bucket). Filenames below are joined onto it.
+    const IMAGE_BASE_URL = CONFIG.API_BASE + '/images/lorry-bus/';
+
+    // Per-option images, keyed by question number (as a string), then by
+    // option letter (A/B/C/D). If a question isn't in this map, or a
+    // particular letter isn't present, no option image is shown for it.
+    const OPTION_IMAGES = {
+      "6769": {"A": "CD6769a.gif", "B": "CD6769b.gif", "C": "CD6769c.gif", "D": "CD6769d.gif"},
+      "6971": {"A": "CD6971a.gif", "B": "CD6971b.gif", "C": "CD6971c.gif", "D": "CD6971d.gif"},
+      "7218": {"A": "CD7218a.gif", "B": "CD7218b.gif", "C": "CD7218c.gif", "D": "CD7218d.gif"},
+      "5106": {"A": "CC5106a.gif", "B": "CC5106b.gif", "C": "CC5106c.gif", "D": "CC5106d.gif"},
+      "5214": {"A": "CC5214a.gif", "B": "CC5214b.gif", "C": "CC5214c.gif", "D": "CC5214d.gif"},
+      "5256": {"A": "CC5256a.gif", "B": "CC5256b.gif", "C": "CC5256c.gif", "D": "CC5256d.gif"},
+      "5360": {"A": "CC5360a.gif", "B": "CC5360b.gif", "C": "CC5360c.gif", "D": "CC5360d.gif"},
+      "5447": {"A": "CC5447a.gif", "B": "CC5447b.gif", "C": "CC5447c.gif", "D": "CC5447d.gif"},
+      "5449": {"A": "CC5449a.gif", "B": "CC5449b.gif", "C": "CC5449c.gif", "D": "CC5449d.gif"},
+      "5450": {"A": "CC5450a.gif", "B": "CC5450b.gif", "C": "CC5450c.gif", "D": "CC5450d.gif"},
+      "6099": {"A": "CD6099a.gif", "B": "CD6099b.gif", "C": "CD6099c.gif", "D": "CD6099d.gif"},
+      "6481": {"A": "CD6481a.gif", "B": "CD6481b.gif", "C": "CD6481c.gif", "D": "CD6481d.gif"},
+      "6486": {"A": "CD6486a.gif", "B": "CD6486b.gif", "C": "CD6486c.gif", "D": "CD6486d.gif"},
+      "6488": {"A": "CD6488a.gif", "B": "CD6488b.gif", "C": "CD6488c.gif", "D": "CD6488d.gif"},
+      "6492": {"A": "CD6492a.gif", "B": "CD6492b.gif", "C": "CD6492c.gif", "D": "CD6492d.gif"},
+      "6540": {"A": "CD6540a.gif", "B": "CD6540b.gif", "C": "CD6540c.gif", "D": "CD6540d.gif"},
+      "6541": {"A": "CD6541a.gif", "B": "CD6541b.gif", "C": "CD6541c.gif", "D": "CD6541d.gif"}
+    };
+
+    // Main question-body image (one per question, not per-option). Keyed by
+    // question number, value is just the filename. Populate this the same
+    // way as OPTION_IMAGES for any question that has a diagram/photo shown
+    // above the answer choices rather than inside each option.
+    const QUESTION_IMAGES = {
+      // e.g. "6769": "CD6769q.gif",
+    };
+
+    function getOptionImageUrl(qNumber, letter) {
+      const entry = OPTION_IMAGES[String(qNumber)];
+      if (!entry) return null;
+      const file = entry[String(letter).toUpperCase()];
+      return file ? IMAGE_BASE_URL + file : null;
+    }
+    function getQuestionImageUrl(qNumber) {
+      const file = QUESTION_IMAGES[String(qNumber)];
+      return file ? IMAGE_BASE_URL + file : null;
+    }
+    function optionImageTag(qNumber, letter) {
+      const url = getOptionImageUrl(qNumber, letter);
+      if (!url) return '';
+      return `<img class="opt-img" src="${url}" alt="Option ${esc(String(letter).toUpperCase())}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'img-missing',textContent:'Image unavailable'}))">`;
+    }
+    function questionImagePanelHTML(qNumber) {
+      const url = getQuestionImageUrl(qNumber);
+      if (!url) return '';
+      return `<div class="img-panel"><img src="${url}" alt="Question ${esc(String(qNumber))} diagram" onerror="this.parentElement.innerHTML='<div class=&quot;img-missing&quot;>Image unavailable</div>'"></div>`;
+    }
+
     const ALL_TOPICS = [
       "Braking systems","Carrying passengers","Drivers' hours and rest periods",
       "Environmental issues","Essential documents","Incidents, accidents and emergencies",
@@ -1804,7 +1862,8 @@
             else cls += ' locked';
           } else if (isChosen) cls += ' selected';
           const clk = rev ? '' : `onclick="toggleMulti('${opt.letter}', ${q.selectCount || 2})"`;
-          opH += `<div class="${cls}" ${clk}><div class="opt-badge">${isChosen && !rev ? '☑' : opt.letter.toUpperCase()}</div><div>${optLang(opt.en, opt.ta)}</div></div>`;
+          const imgTag = optionImageTag(q.number, opt.letter);
+          opH += `<div class="${cls}" ${clk}><div class="opt-badge">${isChosen && !rev ? '☑' : opt.letter.toUpperCase()}</div><div>${optLang(opt.en, opt.ta)}${imgTag}</div></div>`;
         }
       } else {
         for (const opt of q.options) {
@@ -1812,7 +1871,8 @@
           if (rev) cls += opt.letter === corr ? ' correct locked' : (opt.letter === sel ? ' wrong locked' : ' locked');
           else if (opt.letter === sel) cls += ' selected';
           const clk = rev ? '' : `onclick="pickSingle('${opt.letter}')"`;
-          opH += `<div class="${cls}" ${clk}><div class="opt-badge">${opt.letter.toUpperCase()}</div><div>${optLang(opt.en, opt.ta)}</div></div>`;
+          const imgTag = optionImageTag(q.number, opt.letter);
+          opH += `<div class="${cls}" ${clk}><div class="opt-badge">${opt.letter.toUpperCase()}</div><div>${optLang(opt.en, opt.ta)}${imgTag}</div></div>`;
         }
       }
 
@@ -1821,6 +1881,8 @@
       if (cfg.lang === 'ta') qH = `<div class="q-en" style="color:var(--text)">${esc(qTa)}</div>`;
       else if (cfg.lang === 'en') qH = `<div class="q-en">${esc(qEn)}</div>`;
       else qH = `<div class="q-en">${esc(qEn)}</div><div class="q-ta" style="margin-top:5px">${esc(qTa)}</div>`;
+
+      const qImgH = questionImagePanelHTML(q.number);
 
       const multiHint = isMulti && !rev ? `<div class="multi-hint">Select ${q.selectCount || 2} answers, then submit.</div>` : '';
       const submitBtn = isMulti && !rev ? `<button class="multi-submit-btn" ${multiSelected[cur].length !== (q.selectCount||2) ? 'disabled' : ''} onclick="submitMulti()">Submit answer</button>` : '';
@@ -1834,6 +1896,7 @@
 
       document.getElementById('qBody').innerHTML = `
         <div class="q-body">${qH}</div>
+        ${qImgH}
         ${multiHint}
         <div class="options-wrap">${opH}</div>
         ${submitBtn}
@@ -1955,7 +2018,8 @@
       for (const opt of q.options) {
         const isCorrect = isMulti ? corrArr(corr).includes(opt.letter) : opt.letter === corr;
         const cls = 'option-card locked' + (isCorrect ? ' study-correct' : '');
-        opH += `<div class="${cls}"><div class="opt-badge">${opt.letter.toUpperCase()}</div><div>${optLang(opt.en, opt.ta)}</div></div>`;
+        const imgTag = optionImageTag(q.number, opt.letter);
+        opH += `<div class="${cls}"><div class="opt-badge">${opt.letter.toUpperCase()}</div><div>${optLang(opt.en, opt.ta)}${imgTag}</div></div>`;
       }
       let qH = '';
       if (cfg.lang === 'ta') qH = `<div class="study-q-en" style="color:var(--text)">${esc(q.question_ta)}</div>`;
@@ -1964,6 +2028,9 @@
       const correctLabel = isMulti ? corrArr(corr).map(c=>c.toUpperCase()).join(', ') : (corr?corr.toUpperCase():'');
       const exEnH = q.explanation_en && cfg.lang !== 'ta' ? `<p class="expl-en"> ${esc(q.explanation_en)}</p>` : '';
       const exTaH = q.explanation_ta && cfg.lang !== 'en' ? `<p class="expl-ta"> ${esc(q.explanation_ta)}</p>` : '';
+      const qImgH = getQuestionImageUrl(q.number)
+        ? `<div class="study-img"><img src="${getQuestionImageUrl(q.number)}" alt="Question ${esc(String(q.number))} diagram" onerror="this.parentElement.innerHTML='<div class=&quot;img-missing&quot;>Image unavailable</div>'"></div>`
+        : '';
 
       return `
         <div class="study-card-head">
@@ -1973,6 +2040,7 @@
           </div>
           ${qH}
         </div>
+        ${qImgH}
         <div class="study-opts">${opH}</div>
         <div class="study-correct-badge">✓ Correct answer: ${correctLabel}</div>
         <div class="study-expl">${exEnH}${exTaH}</div>`;
