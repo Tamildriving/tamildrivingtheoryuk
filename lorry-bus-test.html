@@ -1270,43 +1270,61 @@
     </div>
 </div>
 
-<!-- ═══ PANEL 4 – AUTO-SCROLL ═══ -->
-<div class="tab-panel" id="panel4">
-    <div id="scrollLockedView" class="quiz-card">
-        <div class="locked-overlay">
-            <div class="lock-icon">🔒</div>
-            <strong id="scrollLockTitle">Copyright Agreement Required</strong>
-            <p id="scrollLockMsg">Please read and accept the Copyright &amp; Licence Agreement before accessing auto-scroll.</p>
-            <button class="goto-copyright" id="scrollLockBtn" onclick="switchTab(0)">Go to Copyright Tab →</button>
-        </div>
-    </div>
-    <div id="scrollView" style="display:none">
-        <div class="quiz-card" style="margin-top:18px">
-            <div class="toolbar">
-                <div class="timer-group" style="gap:8px;align-items:center">
-                    <span class="timer-label">🐢 Speed</span>
-                    <input type="range" id="scrollSpeedSlider" min="1" max="10" value="2" style="width:90px;accent-color:var(--accent)" oninput="updateScrollSpeed()">
-                    <span class="timer-label" id="scrollSpeedLabel">Slow</span>
-                    <button class="btn btn-green" id="scrollBtnStart" onclick="startScroll()">▶ START</button>
-                    <button class="btn btn-amber" id="scrollBtnPause" onclick="pauseScroll()" style="display:none">⏸ PAUSE</button>
-                    <button class="btn" id="scrollBtnReset" onclick="resetScroll()" style="background:var(--border);color:var(--text)">↺ STOP</button>
-                </div>
-                <span class="idle-badge" id="scrollStatus">Idle</span>
-                <div class="zoom-group">
-                    <span class="zoom-lbl">🔍</span>
-                    <button class="zoom-btn" onclick="adjustZoom(-1)">−</button>
-                    <span class="zoom-level" id="scrollZoomBadge">100%</span>
-                    <button class="zoom-btn" onclick="adjustZoom(1)">+</button>
-                    <button class="zoom-btn" onclick="resetZoom()" style="font-size:.6rem;width:auto;padding:0 4px;">↺</button>
-                </div>
+    <!-- ═══ PANEL 4 – SCROLL (auto-scroll all questions) ═══ -->
+    <div class="tab-panel" id="panel4">
+
+        <!-- Locked view -->
+        <div id="scrollLockedView" class="quiz-card">
+            <div class="locked-overlay">
+                <div class="lock-icon">🔒</div>
+                <strong>Scroll Mode — Full Access Required</strong>
+                <p>Scroll mode requires full access. Get 30 days of unlimited access for just £14.14 — one-time, no subscription.</p>
+                <button class="goto-copyright" onclick="openSubscribe()">Get Full Access £14.14 →</button>
+                <button class="goto-copyright" onclick="switchTab(0)" style="background:var(--border);color:var(--text2);margin-top:6px">View Terms →</button>
             </div>
-            <div class="progress-wrap"><div class="progress-fill" id="scrollProgressBar" style="width:0%"></div></div>
         </div>
-        <div id="scrollContainer" class="scroll-container">
-            <div id="scrollInner"></div>
+
+        <!-- Unlocked view -->
+        <div id="scrollView" style="display:none">
+            <div class="quiz-card" style="margin-top:18px">
+
+                <!-- Toolbar -->
+                <div class="toolbar" style="flex-wrap:wrap;gap:8px">
+                    <div class="q-counter" id="scrollCounter">0 questions</div>
+
+                    <!-- Speed control -->
+                    <div class="timer-group" style="gap:8px;align-items:center">
+                        <span class="timer-label">🐢 Speed</span>
+                        <input type="range" id="scrollSpeedSlider" min="1" max="10" value="2" style="width:90px;accent-color:var(--accent)" oninput="updateScrollSpeed()">
+                        <span class="timer-label" id="scrollSpeedLabel">Slow</span>
+                        <button class="btn btn-green" id="scrollBtnStart" onclick="startScroll()">▶ START</button>
+                        <button class="btn btn-amber" id="scrollBtnPause" onclick="pauseScroll()" style="display:none">⏸ PAUSE</button>
+                        <button class="btn" id="scrollBtnReset" onclick="resetScroll()" style="background:var(--border);color:var(--text)">↺ STOP</button>
+                    </div>
+                    <span class="idle-badge" id="scrollStatus">Idle</span>
+
+                    <!-- Zoom -->
+                    <div class="zoom-group">
+                        <span class="zoom-lbl">🔍</span>
+                        <button class="zoom-btn" onclick="adjustZoom(-1)">−</button>
+                        <span class="zoom-level" id="scrollZoomBadge">100%</span>
+                        <button class="zoom-btn" onclick="adjustZoom(1)">+</button>
+                        <button class="zoom-btn" onclick="resetZoom()" style="font-size:.6rem;width:auto;padding:0 4px;">↺</button>
+                    </div>
+                </div>
+
+                <div class="progress-wrap">
+                    <div class="progress-fill" id="scrollProgressBar" style="width:0%"></div>
+                </div>
+
+            </div>
+
+            <!-- Scrollable question list -->
+            <div id="scrollContainer" class="scroll-container">
+                <div id="scrollInner"></div>
+            </div>
         </div>
     </div>
-</div>
 
 <!-- ═══ PANEL 5 – SETTINGS ═══ -->
 <div class="tab-panel" id="panel5">
