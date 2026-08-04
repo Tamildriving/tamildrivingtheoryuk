@@ -2090,6 +2090,7 @@
       questionsToShow.forEach((q) => {
         const card = document.createElement('div');
         card.className = 'study-single-card';
+	card.dataset.qIndex = idx + 1; // NEW: tag each card with its 1-based position
         card.innerHTML = buildStudyCardHTML(q);
         inner.appendChild(card);
       });
@@ -2114,6 +2115,8 @@
         endMsg.textContent = '— End of questions —';
         inner.appendChild(endMsg);
       }
+      attachScrollCounterListener();       // NEW
+               updateScrollCounterDisplay(1);       // NEW (was: document.getElementById('scrollCounter').textContent = ...)
       resetScroll();
     }
 
