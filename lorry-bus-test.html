@@ -984,7 +984,7 @@
                 இந்த விதிமுறைகளில் எதுவும், அலட்சியத்தால் ஏற்படும் இறப்பு அல்லது தனிப்பட்ட காயம், அல்லது மோசடி அல்லது மோசடியான தவறான விளக்கத்திற்கான எங்கள் பொறுப்பை வரம்பிடவில்லை.
             </p>
             <p style="margin-top:6px; font-size:.82rem; color:var(--text3);">
-                This app is provided for revision purposes only. Passing the DVSA theory test requires preparation with up-to-date official materials and we make no guarantee that use of this app will result in a pass. To the fullest extent permitted by law, we exclude liability for: Any loss of profit, income or expected savings arising from your use of the app; Any loss of data or business resulting from your use of the app; Any inaccuracies, errors or omissions in the content; Any reliance you place on content in this app when taking the DVSA theory test. Nothing in these Terms limits our liability for death or personal injury caused by negligence, or for fraud or fraudulent misrepresentation.
+                Nothing in these Terms limits our liability for death or personal injury caused by negligence, or for fraud or fraudulent misrepresentation.
             </p>
 
             <!-- 9. Privacy -->
@@ -1238,9 +1238,11 @@
                 <div class="progress-wrap"><div class="progress-fill" id="studyProgressBar"></div></div>
                 <div class="nav-row">
                     <button class="study-nav-btn" id="studyBtnPrev" onclick="studyNavigate(-1)">◀ PREV</button>
-                    <div class="study-goto-wrap">
-                        <input class="goto-input" id="studyGotoInput" type="number" min="1" placeholder="Go#">
-                        <button class="goto-btn" onclick="studyGoto()">GO</button>
+                    <div class="nav-center">
+                        <div class="study-goto-wrap">
+                            <input class="goto-input" id="studyGotoInput" type="number" min="1" placeholder="Go#">
+                            <button class="goto-btn" onclick="studyGoto()">GO</button>
+                        </div>
                     </div>
                     <button class="study-nav-btn" id="studyBtnNext" onclick="studyNavigate(1)">NEXT ▶</button>
                 </div>
@@ -1389,14 +1391,8 @@
     const LB_API = CONFIG.API_BASE + '/api/lorry-bus';
 
     // ── Question / option image assets ──────────────────────
-    // Base URL where the .gif image files live. Adjust this to wherever
-    // you actually host the images (e.g. a /public/images folder on the
-    // backend, a CDN, or an S3 bucket). Filenames below are joined onto it.
     const IMAGE_BASE_URL = CONFIG.API_BASE + '/images/';
 
-    // Per-option images, keyed by question number (as a string), then by
-    // option letter (A/B/C/D). If a question isn't in this map, or a
-    // particular letter isn't present, no option image is shown for it.
     const OPTION_IMAGES = {
       "717": {"A": "CD6769a.gif", "B": "CD6769b.gif", "C": "CD6769c.gif", "D": "CD6769d.gif"},
       "407": {"A": "CD6971a.gif", "B": "CD6971b.gif", "C": "CD6971c.gif", "D": "CD6971d.gif"},
@@ -1417,10 +1413,6 @@
       "529": {"A": "CD6541a.gif", "B": "CD6541b.gif", "C": "CD6541c.gif", "D": "CD6541d.gif"}
     };
 
-    // Main question-body image (one per question, not per-option). Keyed by
-    // question number, value is just the filename. Populate this the same
-    // way as OPTION_IMAGES for any question that has a diagram/photo shown
-    // above the answer choices rather than inside each option.
     const QUESTION_IMAGES = {
       // e.g. "6769": "CD6769q.gif",
     };
@@ -1453,8 +1445,8 @@
       "The driver","The road","Vehicle condition","Vehicle loading","Vehicle weights and dimensions"
     ];
 
-    let ALL_QUESTIONS = []; // whatever the current user is entitled to see (preview or full)
-    const PRICE_LABEL = '£14.14'; // TODO: set your real Lorry & Bus price to match STRIPE_PRICE_ID_LORRY_BUS
+    let ALL_QUESTIONS = [];
+    const PRICE_LABEL = '£14.14';
 
     let cfg = {
       darkMode: false, timerDefault: 5, autoReveal: true, shuffle: false,
@@ -1518,7 +1510,6 @@
     let _vtypeCurrent = 'all';
     function setVtype(v) {
       if (!isFullyUnlocked() && v !== 'all') {
-        // Filtering isn't meaningful during the free preview (only 15 main-bank Qs available)
         alert('Category filtering is available with full access. Unlock to filter by Cat C, Cat D, or CPC.');
         return;
       }
@@ -1547,7 +1538,7 @@
     function getFilteredQuestions() {
       const vt = cfg.vehicleType;
       return ALL_QUESTIONS.filter(q => {
-        if (!q.item) return vt === 'all'; // preview questions have no item-based split
+        if (!q.item) return vt === 'all';
         const pfx = q.item.substring(0, 2);
         if (vt === 'catC') return pfx === 'CC' || pfx === 'CD';
         if (vt === 'catD') return pfx === 'DD' || pfx === 'CD';
@@ -1561,7 +1552,6 @@
       return baseQs.filter(q => q.topic === cfg.topic);
     }
 
-    // ── Multi-answer helpers (CPC case studies) ─────────────────
     function corrArr(corr) { return Array.isArray(corr) ? corr : [corr]; }
     function selArr(sel) { return Array.isArray(sel) ? sel : (sel !== null && sel !== undefined ? [sel] : []); }
     function answerCorrect(sel, corr) {
@@ -1591,9 +1581,8 @@
       }
     }
 
-    // ── Auth / access state (shared login with the Car app) ────
     const TRIAL_LIMIT = 3;
-    const FREE_STUDY_LIMIT = 15; // matches backend preview slice
+    const FREE_STUDY_LIMIT = 15;
 
     let authToken = localStorage.getItem('authToken') || null;
     let authEmail = null;
@@ -1642,9 +1631,6 @@
       if (ok) window.location.href = 'index.html?auth=register';
     }
 
-    // Fetch the full bank directly — if the user has active Lorry & Bus access
-    // the server returns 200, otherwise 403 NO_ACTIVE_ACCESS. This avoids
-    // needing to touch the Car product's /api/me response shape at all.
     async function refreshAccessAndQuestions() {
       if (!authToken) { ALL_QUESTIONS = []; _accessExpiresAt = null; await loadPreview(); return; }
       const full = await apiFetch(LB_API, '/questions/full');
@@ -1652,7 +1638,7 @@
       if (full.status === 401) { clearAuth(); ALL_QUESTIONS = []; await loadPreview(); return; }
       if (full.ok) {
         ALL_QUESTIONS = full.data.questions || [];
-        _accessExpiresAt = new Date(Date.now() + 86400000).toISOString(); // known-active; exact expiry not needed for the UI gate
+        _accessExpiresAt = new Date(Date.now() + 86400000).toISOString();
       } else {
         _accessExpiresAt = null;
         await loadPreview();
@@ -1680,7 +1666,6 @@
       }
     }
 
-    // ── Tabs ──────────────────────────────────────────────────
     function switchTab(idx) {
       document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
       document.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
@@ -1781,7 +1766,6 @@
       switchTab(1);
     }
 
-    // ── Quiz engine ───────────────────────────────────────────
     let AQ = [], cur = 0, answered = [], revealed = [], multiSelected = [];
     let timerIv = null, timerCD = 0, timerOn = false;
 
@@ -2008,9 +1992,6 @@
       }, 1000);
     }
 
-    // Shared renderer: builds the "study card" markup for a single question object.
-    // Used by both Study mode (renderStudySingle) and the Scroll panel (buildScrollPanel),
-    // so the two views look identical.
     function buildStudyCardHTML(q) {
       const isMulti = !!q.multi;
       const corr = q.correct_answer;
@@ -2035,7 +2016,6 @@
       return `
         <div class="study-card-head">
           <div class="scroll-q-num-row">
-            <div class="study-q-num">Q${q.number}</div>
             <span class="scroll-q-topic">${esc(q.topic || '')}</span>
           </div>
           ${qH}
@@ -2074,8 +2054,8 @@
     // ── Scroll Panel (now rendered as a vertical stack of study-style cards) ──
     let scrollRAF = null;
     let scrollRunning = false;
-    let scrollSpeed = 2;  // slider value 1-10
-    let scrollAccum = 0.0;    // sub-pixel accumulator for smooth slow scroll
+    let scrollSpeed = 2;
+    let scrollAccum = 0.0;
 
     function enforceScrollLock() {
       const subscribed = isFullyUnlocked();
@@ -2098,7 +2078,6 @@
       if (!inner) return;
       inner.innerHTML = '';
 
-      // Scroll panel shares the same question list/filtering as Study mode.
       if (!SQ.length) buildStudyList();
 
       const subscribed      = isFullyUnlocked();
@@ -2115,7 +2094,6 @@
         inner.appendChild(card);
       });
 
-      // After the free preview limit — show a full-access upsell card, styled to match.
       if (!subscribed) {
         const lockCard = document.createElement('div');
         lockCard.className = 'study-single-card';
@@ -2160,11 +2138,9 @@
       const el = document.getElementById('scrollContainer');
       if (!el) return;
 
-      // Sub-pixel accumulation: move every frame, no skipping = no flicker
-      // Speed 1 = 0.08px/frame (~5px/s), Speed 5 = 0.5px/frame (~30px/s), Speed 10 = 6px/frame
       const pxPerFrame = scrollSpeed <= 5
-        ? 0.08 * scrollSpeed          // 0.08 → 0.40 px/frame for speeds 1-5
-        : (scrollSpeed - 5) * 1.2;   // 1.2 → 6.0 px/frame for speeds 6-10
+        ? 0.08 * scrollSpeed
+        : (scrollSpeed - 5) * 1.2;
       scrollAccum += pxPerFrame;
       if (scrollAccum >= 1) {
         const move = Math.floor(scrollAccum);
@@ -2172,13 +2148,11 @@
         scrollAccum -= move;
       }
 
-      // Update progress bar
       const maxScroll = el.scrollHeight - el.clientHeight;
       const pct = maxScroll > 0 ? Math.min(100, (el.scrollTop / maxScroll) * 100) : 0;
       const pb = document.getElementById('scrollProgressBar');
       if (pb) pb.style.width = pct + '%';
 
-      // Stop at bottom
       if (el.scrollTop >= maxScroll - 1) {
         pauseScroll();
         document.getElementById('scrollStatus').textContent = 'Reached end';
