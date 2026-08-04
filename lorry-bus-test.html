@@ -1591,11 +1591,11 @@
       authEmail = (_storedUser && _storedUser.email) || null;
     } catch (e) { authEmail = null; }
     let _accessExpiresAt = null;
-    var _termsAccepted = false;
+    var _termsAccepted = localStorage.getItem('lb_terms_accepted') === '1';
     var _trialCount = 0;
 
     function hasAcceptedTerms() { return _termsAccepted; }
-    function markTermsAccepted() { _termsAccepted = true; }
+    function markTermsAccepted() { _termsAccepted = true; localStorage.setItem('lb_terms_accepted', '1'); }
     function isLoggedIn() { return !!authToken; }
     function isFullyUnlocked() { return !!(_accessExpiresAt && new Date(_accessExpiresAt) > new Date()); }
     function trialsRemaining() { return Math.max(0, TRIAL_LIMIT - _trialCount); }
