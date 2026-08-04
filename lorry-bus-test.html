@@ -2073,57 +2073,10 @@
       }
     }
 
-    function buildScrollPanel() {
-      const inner = document.getElementById('scrollInner');
-      if (!inner) return;
-      inner.innerHTML = '';
-
-      if (!SQ.length) buildStudyList();
-
-      const subscribed      = isFullyUnlocked();
-      const questionsToShow = subscribed ? SQ : SQ.slice(0, FREE_STUDY_LIMIT);
-
-      questionsToShow.forEach((q, idx) => {
-        const card = document.createElement('div');
-        card.className = 'study-single-card';
-        card.dataset.qIndex = idx + 1;
-        card.innerHTML = buildStudyCardHTML(q);
-        inner.appendChild(card);
-      });
-
-      if (!subscribed) {
-        const lockCard = document.createElement('div');
-        lockCard.className = 'study-single-card';
-        lockCard.style.cssText = 'border:2px dashed var(--accent);padding:32px 20px;text-align:center;box-shadow:none;';
-        const loggedIn = isLoggedIn();
-        const btnLabel = loggedIn ? '🔓 Get Full Access →' : '✍️ Register for Full Access →';
-        const btnAction = loggedIn ? 'openSubscribe()' : 'goToRegister()';
-        lockCard.innerHTML = `
-          <div style="font-size:2.2rem;margin-bottom:10px">🔒</div>
-          <div style="font-weight:700;font-size:1rem;color:var(--text);margin-bottom:8px">Get Full Access to See All ${SQ.length} Questions</div>
-          <div style="font-size:.84rem;color:var(--text2);margin-bottom:16px">You have previewed the first <strong>${Math.min(FREE_STUDY_LIMIT,SQ.length)}</strong> questions for free.<br>Get full access to unlock the full Scroll panel.</div>
-          <button onclick="${btnAction}" style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:11px 26px;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;">${btnLabel}</button>
-        `;
-        inner.appendChild(lockCard);
-      } else {
-        const endMsg = document.createElement('div');
-        endMsg.className = 'scroll-end-msg';
-        endMsg.textContent = '— End of questions —';
-        inner.appendChild(endMsg);
-      }
-
-      attachScrollCounterListener();
-      updateScrollCounterDisplay(1);
-      resetScroll();
-    }
-
+    // ── new scroll counter functions ──
     function updateScrollCounterDisplay(currentNum) {
       const subscribed = isFullyUnlocked();
       const total = SQ.length;
-      if (total === 0) {
-        document.getElementById('scrollCounter').textContent = '0 questions';
-        return;
-      }
       if (subscribed) {
         document.getElementById('scrollCounter').textContent = `${currentNum} / ${total}`;
       } else {
@@ -2157,6 +2110,51 @@
       if (!el) return;
       el.removeEventListener('scroll', handleScrollCounterUpdate);
       el.addEventListener('scroll', handleScrollCounterUpdate);
+    }
+
+    // ── buildScrollPanel (updated) ──
+    function buildScrollPanel() {
+      const inner = document.getElementById('scrollInner');
+      if (!inner) return;
+      inner.innerHTML = '';
+
+      if (!SQ.length) buildStudyList();
+
+      const subscribed      = isFullyUnlocked();
+      const questionsToShow = subscribed ? SQ : SQ.slice(0, FREE_STUDY_LIMIT);
+
+      questionsToShow.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'study-single-card';
+        card.dataset.qIndex = idx + 1; // tag each card with its 1-based position
+        card.innerHTML = buildStudyCardHTML(q);
+        inner.appendChild(card);
+      });
+
+      if (!subscribed) {
+        const lockCard = document.createElement('div');
+        lockCard.className = 'study-single-card';
+        lockCard.style.cssText = 'border:2px dashed var(--accent);padding:32px 20px;text-align:center;box-shadow:none;';
+        const loggedIn = isLoggedIn();
+        const btnLabel = loggedIn ? '🔓 Get Full Access →' : '✍️ Register for Full Access →';
+        const btnAction = loggedIn ? 'openSubscribe()' : 'goToRegister()';
+        lockCard.innerHTML = `
+          <div style="font-size:2.2rem;margin-bottom:10px">🔒</div>
+          <div style="font-weight:700;font-size:1rem;color:var(--text);margin-bottom:8px">Get Full Access to See All ${SQ.length} Questions</div>
+          <div style="font-size:.84rem;color:var(--text2);margin-bottom:16px">You have previewed the first <strong>${Math.min(FREE_STUDY_LIMIT,SQ.length)}</strong> questions for free.<br>Get full access to unlock the full Scroll panel.</div>
+          <button onclick="${btnAction}" style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:11px 26px;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;">${btnLabel}</button>
+        `;
+        inner.appendChild(lockCard);
+      } else {
+        const endMsg = document.createElement('div');
+        endMsg.className = 'scroll-end-msg';
+        endMsg.textContent = '— End of questions —';
+        inner.appendChild(endMsg);
+      }
+
+      attachScrollCounterListener();       // NEW
+      updateScrollCounterDisplay(1);       // NEW (was: document.getElementById('scrollCounter').textContent = ...)
+      resetScroll();
     }
 
     function updateScrollSpeed() {
