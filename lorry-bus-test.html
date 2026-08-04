@@ -1237,13 +1237,13 @@
                 </div>
                 <div class="progress-wrap"><div class="progress-fill" id="studyProgressBar"></div></div>
                 <div class="nav-row">
-                   <button class="nav-btn" id="studyBtnPrev" onclick="studyNavigate(-1)">◀ PREV</button>
-                   <div class="goto-wrap">
-                   <input class="goto-input" id="studyGotoInput" type="number" min="1" placeholder="Go#">
-                    <button class="goto-btn" onclick="studyGoto()">GO</button>
-                   </div>
-                   <button class="nav-btn" id="studyBtnNext" onclick="studyNavigate(1)">NEXT ▶</button>
-                   </div>
+                    <button class="study-nav-btn" id="studyBtnPrev" onclick="studyNavigate(-1)">◀ PREV</button>
+                    <div class="study-goto-wrap">
+                        <input class="goto-input" id="studyGotoInput" type="number" min="1" placeholder="Go#">
+                        <button class="goto-btn" onclick="studyGoto()">GO</button>
+                    </div>
+                    <button class="study-nav-btn" id="studyBtnNext" onclick="studyNavigate(1)">NEXT ▶</button>
+                </div>
                 <div id="studyBody"></div>
             </div>
         </div>
@@ -2033,9 +2033,9 @@
         : '';
 
       return `
-        return `
         <div class="study-card-head">
           <div class="scroll-q-num-row">
+            <div class="study-q-num">Q${q.number}</div>
             <span class="scroll-q-topic">${esc(q.topic || '')}</span>
           </div>
           ${qH}
