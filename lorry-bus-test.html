@@ -1223,6 +1223,7 @@
                         <span class="timer-label">⏱ Auto-next</span>
                         <input class="timer-input" id="studyTimerSecs" type="number" min="1" max="999" value="8">
                         <span style="font-size:.72rem;color:var(--text3)">sec</span>
+                        <span class="timer-ring" id="studyTimerRing"></span>
                         <button class="btn btn-green" id="studyBtnStart" onclick="startStudyTimer()">▶ START</button>
                         <button class="btn btn-amber" id="studyBtnPause" onclick="pauseStudyTimer()" style="display:none">⏸ PAUSE</button>
                     </div>
@@ -1907,11 +1908,22 @@
     function resetCD() {
       clearInterval(timerIv);
       timerCD = parseInt(document.getElementById('timerSecs').value) || cfg.timerDefault;
+      document.getElementById('timerRing').textContent = timerCD;
       timerIv = setInterval(() => {
+        if (!timerOn) { clearInterval(timerIv); return; }
         timerCD--;
+        document.getElementById('timerRing').textContent = timerCD;
         if (timerCD <= 0) {
-          if (cfg.autoReveal && !revealed[cur]) revealed[cur] = true, render();
-          if (cur < AQ.length-1) { cur++; render(); resetCD(); } else pauseTimer();
+          clearInterval(timerIv);
+          timerIv = null;
+          if (cur >= AQ.length - 1) { pauseTimer(); return; }
+          if (cfg.autoReveal && !revealed[cur]) {
+            revealed[cur] = true;
+            render();
+            setTimeout(() => { navigate(1); }, 900);
+          } else {
+            navigate(1);
+          }
         }
       }, 1000);
     }
@@ -1986,9 +1998,17 @@
     function resetStudyCD() {
       clearInterval(studyTimerIv);
       studyTimerCD = parseInt(document.getElementById('studyTimerSecs').value) || cfg.timerDefault;
+      document.getElementById('studyTimerRing').textContent = studyTimerCD;
       studyTimerIv = setInterval(() => {
+        if (!studyTimerOn) { clearInterval(studyTimerIv); return; }
         studyTimerCD--;
-        if (studyTimerCD <= 0) { if (studyCur < SQ.length-1) { studyCur++; renderStudySingle(); resetStudyCD(); } else pauseStudyTimer(); }
+        document.getElementById('studyTimerRing').textContent = studyTimerCD;
+        if (studyTimerCD <= 0) {
+          clearInterval(studyTimerIv);
+          studyTimerIv = null;
+          if (studyCur >= SQ.length - 1) { pauseStudyTimer(); return; }
+          studyNavigate(1);
+        }
       }, 1000);
     }
 
