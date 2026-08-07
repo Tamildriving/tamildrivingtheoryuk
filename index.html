@@ -231,6 +231,29 @@
     }
     @media (max-width: 560px) { .demo-frame { aspect-ratio: 16 / 10; max-height: 50vh; } }
 
+    /* -- Scrolling message strip below demo video -- */
+    .demo-scroll {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      background: var(--accent-dk);
+      padding: 10px 0;
+    }
+    .demo-scroll p {
+      display: inline-block;
+      padding-left: 100%;
+      margin: 0;
+      color: #fff;
+      font-size: 1.85rem;
+      font-weight: 600;
+      animation: demo-scroll-left 60s linear infinite;
+    }
+    .demo-scroll:hover p { animation-play-state: paused; }
+    @keyframes demo-scroll-left {
+      0%   { transform: translate(0, 0); }
+      100% { transform: translate(-100%, 0); }
+    }
+
 
     ::-webkit-scrollbar { width: 6px; background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -413,6 +436,11 @@
   <video autoplay muted loop playsinline poster="assets/demo-poster.jpg">
     <source src="assets/demo-optimized.mp4" type="video/mp4">
   </video>
+</div>
+
+<!-- SCROLLING MESSAGE — sits directly below the demo video -->
+<div class="demo-scroll">
+  <p>லொகின் Login செய்யாமலேயே இலவச சோதனையை தொடங்குங்கள்.DVSA.திருத்த வினாக்கள், தமிழ் மற்றும் ஆங்கிலத்தில் இரு மொழி. வினாடி வினா பயிற்சிகள், படிப்பு முறை, தானியங்கி உருட்டல்/ஸ்_குறோல்/Scroll, செயல்திறன் அறிக்கைகள் — உங்கள் உலாவியிலேயே. செயலி பதிவிறக்கம்/ஆப்_டவுண்_லோட் தேவையில்லை.</p>
 </div>
 
 <div class="shell">
