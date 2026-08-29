@@ -462,6 +462,13 @@
           transition: background .2s;
         }
         .report-refresh-btn:hover { background: var(--accent-dk); }
+        .pass-banner {
+          margin: 0 16px 16px; padding: 12px 15px; border-radius: 10px;
+          font-weight: 700; font-size: .9rem; text-align: center;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .pass-banner.pass { background: var(--correct-bg); color: var(--accent2); border: 1.5px solid var(--correct-b); }
+        .pass-banner.fail { background: var(--wrong-bg); color: var(--danger); border: 1.5px solid var(--wrong-b); }
 
         /* ── SETTINGS ── */
         .settings-card {
@@ -1127,7 +1134,7 @@
     <div id="quizView" style="display:none">
         <div class="quiz-card">
             <div class="toolbar">
-                <div class="q-counter" id="qCounter">Question 1 / 50</div>
+                <div class="q-counter" id="qCounter">Question 1 / 100</div>
                 <div class="timer-group">
                     <span class="timer-label">⏱ Auto-next</span>
                     <input class="timer-input" id="timerSecs" type="number" min="1" max="999" value="5">
@@ -1179,7 +1186,7 @@
         <div class="report-card">
             <div class="report-hero">
                 <h2>📊 Quiz Performance Report</h2>
-                <p>See which topics you need to focus on</p>
+                <p>See which topics you need to focus on · Pass mark: 85 / 100 (85%)</p>
             </div>
             <div class="report-summary" id="reportSummary">
                 <div class="report-stat"><div class="report-stat-num" id="rTotal">—</div><div class="report-stat-label">Total Qs</div></div>
@@ -1193,6 +1200,7 @@
                 <strong>No quiz data yet</strong>
                 <p style="margin-top:6px">Complete at least one question in the Quiz tab to see your report.</p>
             </div>
+            <div id="reportPassBanner" class="pass-banner" style="display:none"></div>
             <div id="reportCatSection" class="report-section" style="display:none">
                 <h3>📚 Performance by Topic</h3>
                 <div id="reportCatList"></div>
@@ -1777,7 +1785,8 @@
     }
 
     function buildQ() {
-      const QUIZ_SIZE = 50;
+      const QUIZ_SIZE = 100;
+      const PASS_MARK = 85;
       const pool = getFilteredQuestions();
       const byTopic = {};
       for (const q of pool) { (byTopic[q.topic] = byTopic[q.topic] || []).push(q); }
@@ -1797,6 +1806,8 @@
       cur = 0; answered = new Array(AQ.length).fill(null); revealed = new Array(AQ.length).fill(false);
       multiSelected = AQ.map(() => []);
     }
+
+    const PASS_MARK = 85;
 
     function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function optLang(en, ta) {
@@ -1932,9 +1943,11 @@
       const reportView = document.getElementById('reportView');
       const noData = document.getElementById('reportNoData');
       const catSection = document.getElementById('reportCatSection');
+      const passBanner = document.getElementById('reportPassBanner');
       if (!AQ.length || answered.every(a => a === null || (Array.isArray(a) && a.length === 0))) {
         reportView.style.display = 'block'; noData.style.display = 'block'; catSection.style.display = 'none';
         document.getElementById('reportSummary').style.display = 'none';
+        if (passBanner) passBanner.style.display = 'none';
         return;
       }
       document.getElementById('reportSummary').style.display = 'flex';
@@ -1953,11 +1966,24 @@
         if (ok) byTopic[q.topic].correct++;
       });
       const total = AQ.length;
+      const pct = total ? Math.round((correctN/total)*100) : 0;
       document.getElementById('rTotal').textContent = total;
       document.getElementById('rCorrect').textContent = correctN;
       document.getElementById('rWrong').textContent = wrongN;
       document.getElementById('rSkipped').textContent = skipped;
-      document.getElementById('rPct').textContent = total ? Math.round((correctN/total)*100) + '%' : '—';
+      document.getElementById('rPct').textContent = total ? pct + '%' : '—';
+
+      if (passBanner) {
+        // Pass mark: 85 correct out of a 100-question quiz (85%).
+        // For quizzes with a different total (e.g. filtered pools smaller than 100),
+        // the same 85% threshold is applied.
+        const passed = pct >= PASS_MARK;
+        passBanner.style.display = 'flex';
+        passBanner.className = 'pass-banner ' + (passed ? 'pass' : 'fail');
+        passBanner.textContent = passed
+          ? `✅ PASS — ${correctN}/${total} correct (${pct}%), meets the ${PASS_MARK}% pass mark`
+          : `❌ NOT YET A PASS — ${correctN}/${total} correct (${pct}%), below the ${PASS_MARK}% pass mark`;
+      }
 
       const list = document.getElementById('reportCatList');
       const topics = Object.keys(byTopic);
