@@ -968,7 +968,7 @@
                 இந்த விதிமுறைகளில் எதுவும், அலட்சியத்தால் ஏற்படும் இறப்பு அல்லது தனிப்பட்ட காயம், அல்லது மோசடி அல்லது மோசடியான தவறான விளக்கத்திற்கான எங்கள் பொறுப்பை வரம்பிடவில்லை.
             </p>
             <p style="margin-top:6px; font-size:.82rem; color:var(--text3);">
-                This app is provided for revision purposes only. Passing the DVSA theory test requires preparation with up-to-date official materials and we make no guarantee that use of this app will result in a pass. To the fullest extent permitted by law, we exclude liability for: Any loss of profit, income or expected savings arising from your use of the app; Any loss of data or business resulting from your use of the app; Any inaccuracies, errors or omissions in the content; Any reliance you place on content in this app when taking the DVSA theory test. Nothing in these Terms limits our liability for death or personal injury caused by negligence, or for fraud or fraudulent misrepresentation.
+                Nothing in these Terms limits our liability for death or personal injury caused by negligence, or for fraud or fraudulent misrepresentation.
             </p>
 
             <!-- 9. Privacy -->
@@ -2416,66 +2416,100 @@ if (isFreeUser() && studyCur >= FREE_STUDY_LIMIT) {
       }
     }
 
+    // Reuses the same markup/classes as Study mode (study-single-card,
+    // option-card / opt-badge, study-mark-one, study-correct-badge,
+    // study-expl) so Scrolling looks identical to Study instead of using
+    // its own separate scroll-* card design.
     function buildScrollPanel() {
-  const inner = document.getElementById('scrollInner');
-  if (!inner) return;
-  inner.innerHTML = '';
+      const inner = document.getElementById('scrollInner');
+      if (!inner) return;
+      inner.innerHTML = '';
 
-  const subscribed      = isFullyUnlocked();
-  const questionsToShow = subscribed ? SQ : SQ.slice(0, FREE_STUDY_LIMIT);
+      const subscribed      = isFullyUnlocked();
+      const questionsToShow = subscribed ? SQ : SQ.slice(0, FREE_STUDY_LIMIT);
 
-  document.getElementById('scrollCounter').textContent = subscribed
-    ? SQ.length + ' questions'
-    : 'Showing ' + Math.min(FREE_STUDY_LIMIT, SQ.length) + ' of ' + SQ.length + ' questions (Free Preview)';
+      document.getElementById('scrollCounter').textContent = subscribed
+        ? SQ.length + ' questions'
+        : 'Showing ' + Math.min(FREE_STUDY_LIMIT, SQ.length) + ' of ' + SQ.length + ' questions (Free Preview)';
 
-  questionsToShow.forEach((q) => {
-    const corr    = q.correct_answer;
-    const optImgs = OPTION_IMAGES[String(q.number)] || null;
-    let qText = '';
-    if (cfg.lang !== 'ta') qText += `<div class="scroll-q-text">${esc(q.question_en)}</div>`;
-    if (cfg.lang !== 'en') qText += `<div class="scroll-q-ta">${esc(q.question_ta)}</div>`;
-    const optsH = q.options.map(opt => {
-      const isCorr = opt.letter === corr;
-      let label = '';
-      if (cfg.lang !== 'ta') label += `<span>${esc(opt.en)}</span>`;
-      if (cfg.lang !== 'en' && opt.ta) label += `<span style="display:block;font-size:.75rem;color:var(--text3)">${esc(opt.ta)}</span>`;
-      return `<div class="scroll-opt${isCorr?' scroll-correct':''}"><span class="scroll-opt-badge">${opt.letter.toUpperCase()}</span><div>${label}</div></div>`;
-    }).join('');
-    let expl = '';
-    if (q.explanation_en && cfg.lang !== 'ta') expl += `<div class="scroll-expl"> ${esc(q.explanation_en)}</div>`;
-    if (q.explanation_ta && cfg.lang !== 'en') expl += `<div class="scroll-expl">${esc(q.explanation_ta)}</div>`;
-    let imgH = '';
-    if (cfg.showImages && q.image_file) imgH = `<img src="${esc(cfg.imagesPath+'/'+q.image_file)}" style="max-width:100%;border-radius:6px;margin:6px 0" onerror="this.style.display='none'">`;
-    const cat  = getCategoryForQ(q);
-    const catH = cat ? `<span style="font-size:.66rem;color:var(--text3);margin-left:6px">· ${esc(cat.label)}</span>` : '';
-    const card = document.createElement('div');
-    card.className = 'scroll-q-card';
-    card.innerHTML = `<div class="scroll-q-num">Q${q.number}${catH}</div>${qText}${imgH}<div class="scroll-opts">${optsH}</div><span class="scroll-answer-badge">✓ Answer: ${corr?corr.toUpperCase():'N/A'}</span>${expl}`;
-    inner.appendChild(card);
-  });
+      questionsToShow.forEach((q) => {
+        const corr    = q.correct_answer;
+        const optImgs = OPTION_IMAGES[String(q.number)] || null;
 
-  // After Q10 for free users — show full-access card
-  if (!subscribed) {
-    const lockCard = document.createElement('div');
-    lockCard.style.cssText = 'background:var(--surface);border:2px dashed var(--accent);border-radius:var(--radius);margin:16px 0;padding:32px 20px;text-align:center;';
-    const loggedIn = isLoggedIn();
-    const btnLabel = loggedIn ? '🔓 Get Full Access →' : '✍️ Register for Full Access →';
-    const btnAction = loggedIn ? 'openSubscribe()' : 'goToRegister()';
-    lockCard.innerHTML = `
-      <div style="font-size:2.2rem;margin-bottom:10px">🔒</div>
-      <div style="font-weight:700;font-size:1rem;color:var(--text);margin-bottom:8px">Get Full Access to See All ${SQ.length} Questions</div>
-      <div style="font-size:.84rem;color:var(--text2);margin-bottom:16px">You have previewed the first <strong>${Math.min(FREE_STUDY_LIMIT,SQ.length)}</strong> questions for free.<br>Get full access to unlock the full Scroll panel.</div>
-      <button onclick="${btnAction}" style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:11px 26px;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;">${btnLabel}</button>
-    `;
-    inner.appendChild(lockCard);
-  } else {
-    const endMsg = document.createElement('div');
-    endMsg.className = 'scroll-end-msg';
-    endMsg.textContent = '— End of questions —';
-    inner.appendChild(endMsg);
-  }
-  resetScroll();
-}
+        // Options — same markup as Study mode (option-card / opt-badge)
+        const opH = q.options.map(opt => {
+          const cls = opt.letter === corr ? 'option-card study-correct locked' : 'option-card locked';
+          let optImgH = '';
+          if (cfg.showImages && optImgs && optImgs[opt.letter.toUpperCase()]) {
+            const oSrc = cfg.imagesPath + '/' + optImgs[opt.letter.toUpperCase()];
+            optImgH = `<img class="opt-img" src="${esc(oSrc)}" alt="option ${opt.letter}" onerror="this.style.display='none'">`;
+          }
+          return `<div class="${cls}"><div class="opt-badge">${opt.letter.toUpperCase()}</div><div>${optLang(opt.en,opt.ta)}${optImgH}</div></div>`;
+        }).join('');
+
+        // Image — same style as Study mode
+        const imgH = (cfg.showImages && q.image_file)
+          ? `<div class="study-img"><img src="${esc(cfg.imagesPath+'/'+q.image_file)}" onerror="this.style.display='none'"></div>` : '';
+
+        // Explanation — same style as Study mode
+        const exEnH = q.explanation_en && cfg.lang !== 'ta' ? `<p class="expl-en" style="margin-bottom:4px"> ${esc(q.explanation_en)}</p>` : '';
+        const exTaH = q.explanation_ta && cfg.lang !== 'en' ? `<p class="expl-ta"> ${esc(q.explanation_ta)}</p>` : '';
+
+        // Question header — orange bold text, same as Study
+        let qHeadH = '';
+        if (cfg.lang !== 'ta') qHeadH += `<div class="study-q-en">${esc(q.question_en)}</div>`;
+        if (cfg.lang !== 'en') qHeadH += `<div class="study-q-ta">${esc(q.question_ta)}</div>`;
+
+        // "Mark one answer" pill — same as Study
+        let markH = '';
+        if (cfg.lang === 'ta') markH = `<div class="study-mark-one"><span class="mark-one-ta">ஒரு பதில் தருக</span></div>`;
+        else if (cfg.lang === 'en') markH = `<div class="study-mark-one"><span class="mark-one-en">Mark one answer</span></div>`;
+        else markH = `<div class="study-mark-one"><span class="mark-one-en">Mark one answer</span><span class="mark-one-sep" style="color:var(--text3);margin:0 4px">·</span><span class="mark-one-ta">ஒரு பதில் தருக</span></div>`;
+
+        // Category label above the question
+        const cat  = getCategoryForQ(q);
+        const catH = cat ? `<div style="font-size:.7rem;color:var(--text3);font-weight:700;margin-bottom:4px">Q${q.number} · ${esc(cat.label)}</div>` : `<div style="font-size:.7rem;color:var(--text3);font-weight:700;margin-bottom:4px">Q${q.number}</div>`;
+
+        const card = document.createElement('div');
+        // study-single-card gives the same white rounded card / shadow as Study mode
+        card.className = 'study-single-card';
+        card.style.marginBottom = '14px';
+        card.innerHTML = `
+          <div class="study-card-head">
+            ${catH}
+            ${qHeadH}
+            ${markH}
+          </div>
+          ${imgH}
+          <div class="study-opts">${opH}</div>
+          <div class="study-correct-badge">✓ Answer: ${corr ? corr.toUpperCase() : 'N/A'}</div>
+          <div class="study-expl">${exEnH}${exTaH}</div>
+        `;
+        inner.appendChild(card);
+      });
+
+      // After free limit — same lock card as before
+      if (!subscribed) {
+        const lockCard = document.createElement('div');
+        lockCard.style.cssText = 'background:var(--surface);border:2px dashed var(--accent);border-radius:var(--radius);margin:16px 0;padding:32px 20px;text-align:center;';
+        const loggedIn = isLoggedIn();
+        const btnLabel = loggedIn ? '🔓 Get Full Access →' : '✍️ Register for Full Access →';
+        const btnAction = loggedIn ? 'openSubscribe()' : 'goToRegister()';
+        lockCard.innerHTML = `
+          <div style="font-size:2.2rem;margin-bottom:10px">🔒</div>
+          <div style="font-weight:700;font-size:1rem;color:var(--text);margin-bottom:8px">Get Full Access to See All ${SQ.length} Questions</div>
+          <div style="font-size:.84rem;color:var(--text2);margin-bottom:16px">You have previewed the first <strong>${Math.min(FREE_STUDY_LIMIT,SQ.length)}</strong> questions for free.<br>Get full access to unlock the full Scroll panel.</div>
+          <button onclick="${btnAction}" style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:11px 26px;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;">${btnLabel}</button>
+        `;
+        inner.appendChild(lockCard);
+      } else {
+        const endMsg = document.createElement('div');
+        endMsg.className = 'scroll-end-msg';
+        endMsg.textContent = '— End of questions —';
+        inner.appendChild(endMsg);
+      }
+      resetScroll();
+    }
 
     function updateScrollSpeed() {
       scrollSpeed = parseInt(document.getElementById('scrollSpeedSlider').value) || 2;
